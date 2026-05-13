@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Gerenciador OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="login-page">
+  <div class="login-box">
+
+    <div class="login-logo">
+      <div class="logo-circle">📡</div>
+      <div>
+        <h1 class="grad-text">Gerenciador OS</h1>
+        <p>para Técnicos de Campo</p>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 14px;font-size:.85rem;color:#fca5a5;margin-bottom:16px">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">E-mail</label>
+        <input type="email" name="email" class="form-control" placeholder="seu@email.com" required autofocus>
+      </div>
+
+      <div class="form-group" style="margin-bottom:24px">
+        <label class="form-label">Senha</label>
+        <input type="password" name="senha" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-2);margin-bottom:24px;cursor:pointer">
+        <input type="checkbox" name="remember" style="accent-color:var(--indigo)"> Manter conectado
+      </label>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center">
+        Entrar no sistema
+      </button>
+    </form>
+
+    <div class="form-divider"></div>
+
+    <p style="font-size:.75rem;color:var(--text-3);text-align:center">
+      Acesso restrito a técnicos autorizados.<br>
+      Para suporte, contate o administrador.
+    </p>
+  </div>
+</div>
+
+<script>
+  function showToast(msg,tipo){
+    const c=document.getElementById('toast-container');
+    const t=document.createElement('div');
+    t.className='toast '+(tipo==='danger'?'erro':tipo);
+    t.textContent=msg;
+    c.appendChild(t);
+    setTimeout(()=>t.remove(),3400);
+  }
+</script>
+</body>
+</html>

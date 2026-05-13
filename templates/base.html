@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#060912">
+  <meta name="description" content="Gerenciador de Ordens de Serviço para Técnicos de Campo">
+  <title>{% block title %}Gerenciador OS{% endblock %} — Campo</title>
+
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="has-footer">
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner">⚠️ Modo offline — dados serão sincronizados ao reconectar</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">📡</div>
+    <div>
+      <div class="logo-text">Gerenciador OS</div>
+      <div class="logo-sub">para Campo</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+
+    <a href="{{ url_for('os.dashboard') }}" class="nav-item {% if request.endpoint == 'os.dashboard' %}active{% endif %}">
+      <span class="nav-icon">🏠</span> Dashboard
+    </a>
+    <a href="{{ url_for('os.nova') }}" class="nav-item {% if request.endpoint == 'os.nova' %}active{% endif %}">
+      <span class="nav-icon">➕</span> Nova OS
+    </a>
+    <a href="{{ url_for('os.lista') }}" class="nav-item {% if request.endpoint == 'os.lista' %}active{% endif %}">
+      <span class="nav-icon">📋</span> Ordens de Serviço
+    </a>
+
+    <div class="nav-section-label">Cadastros</div>
+    <a href="#clientes" class="nav-item">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a href="#equipamentos" class="nav-item">
+      <span class="nav-icon">📻</span> Equipamentos
+    </a>
+
+    <div class="nav-section-label">Sistema</div>
+    <a href="#notificacoes" class="nav-item" id="nav-notif">
+      <span class="nav-icon">🔔</span> Notificações
+      <span class="nav-badge" id="notif-count" style="display:none">0</span>
+    </a>
+    {% if current_user.perfil == 'admin' %}
+    <a href="{{ url_for('auth.register') }}" class="nav-item">
+      <span class="nav-icon">⚙️</span> Usuários
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="{{ url_for('auth.logout') }}" class="sidebar-user">
+      <div class="avatar">{{ current_user.nome[0].upper() }}</div>
+      <div>
+        <div class="user-name">{{ current_user.nome }}</div>
+        <div class="user-perfil">{{ current_user.perfil | capitalize }} · Sair</div>
+      </div>
+    </a>
+  </div>
+</aside>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-title">
+    <button onclick="toggleSidebar()" style="background:none;border:none;color:var(--text-2);font-size:1.2rem;cursor:pointer;display:none" id="menu-btn">☰</button>
+    {% block page_title %}Dashboard{% endblock %}
+  </div>
+  <div class="header-actions">
+    <button class="notif-btn" id="notif-btn" onclick="toggleNotifDrawer()" title="Notificações">
+      🔔 <span class="notif-dot" id="notif-dot" style="display:none"></span>
+    </button>
+    <div class="avatar" title="{{ current_user.nome }}">{{ current_user.nome[0].upper() }}</div>
+  </div>
+</header>
+
+<!-- NOTIF DRAWER -->
+<div class="notif-drawer" id="notif-drawer">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <strong>Notificações</strong>
+    <button onclick="lerTodasNotifs()" class="btn btn-sm btn-ghost">Marcar todas lidas</button>
+  </div>
+  <div id="notif-list"><p style="color:var(--text-2);font-size:.85rem">Carregando...</p></div>
+</div>
+
+<!-- MAIN -->
+<main class="main-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <script>document.addEventListener('DOMContentLoaded',()=>showToast({{ message|tojson }},{{ category|tojson }}))</script>
+    {% endfor %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<!-- FOOTER BAR -->
+<footer class="footer-bar">{% block footer %}{% endblock %}</footer>
+
+<!-- SCRIPTS BASE -->
+<script>
+  // ── Sidebar toggle (mobile) ─────────────────────────────
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  if (window.innerWidth <= 768) {
+    document.getElementById('menu-btn').style.display = 'block';
+  }
+
+  // ── Toast ───────────────────────────────────────────────
+  function showToast(msg, tipo) {
+    tipo = tipo || 'info';
+    const map = { success: 'sucesso', danger: 'erro', warning: 'aviso', error: 'erro' };
+    const cls  = map[tipo] || tipo;
+    const c    = document.getElementById('toast-container');
+    const t    = document.createElement('div');
+    t.className = 'toast ' + cls;
+    t.innerHTML = `<span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3400);
+  }
+
+  // ── Notificações ────────────────────────────────────────
+  async function carregarNotifs() {
+    try {
+      const r = await fetch('/api/notificacoes/nao-lidas');
+      const d = await r.json();
+      const badge = document.getElementById('notif-count');
+      const dot   = document.getElementById('notif-dot');
+      const nav   = document.getElementById('notif-count');
+      if (d.count > 0) {
+        if (badge) { badge.textContent = d.count; badge.style.display = ''; }
+        if (dot)   dot.style.display = '';
+      } else {
+        if (badge) badge.style.display = 'none';
+        if (dot)   dot.style.display = 'none';
+      }
+    } catch {}
+  }
+
+  async function toggleNotifDrawer() {
+    const d = document.getElementById('notif-drawer');
+    d.classList.toggle('open');
+    if (d.classList.contains('open')) await renderNotifs();
+  }
+
+  async function renderNotifs() {
+    const list = document.getElementById('notif-list');
+    try {
+      const r    = await fetch('/api/notificacoes/');
+      const data = await r.json();
+      if (!data.length) {
+        list.innerHTML = '<p style="color:var(--text-2);font-size:.85rem">Sem notificações.</p>';
+        return;
+      }
+      list.innerHTML = data.map(n => `
+        <div class="notif-item ${n.lida ? '' : 'nao-lida'}" onclick="lerNotif(${n.id},this)">
+          <div class="notif-msg">${n.mensagem}</div>
+          <div class="notif-time">${new Date(n.criado_em).toLocaleString('pt-BR')}</div>
+        </div>
+      `).join('');
+    } catch { list.innerHTML = '<p style="color:var(--danger)">Erro ao carregar.</p>'; }
+  }
+
+  async function lerNotif(id, el) {
+    await fetch(`/api/notificacoes/${id}/ler`, { method: 'PATCH' });
+    el.classList.remove('nao-lida');
+    carregarNotifs();
+  }
+
+  async function lerTodasNotifs() {
+    await fetch('/api/notificacoes/ler-todas', { method: 'PATCH' });
+    await renderNotifs();
+    carregarNotifs();
+  }
+
+  // ── Offline detection ───────────────────────────────────
+  function atualizarOffline() {
+    document.body.classList.toggle('offline', !navigator.onLine);
+  }
+
+  window.addEventListener('online',  atualizarOffline);
+  window.addEventListener('offline', atualizarOffline);
+  atualizarOffline();
+
+  // ── Init ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    carregarNotifs();
+    setInterval(carregarNotifs, 30000);
+  });
+</script>
+
+<!-- Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/js/sw.js').catch(()=>{});
+  }
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

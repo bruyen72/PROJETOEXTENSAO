@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}<span class="grad-text">Dashboard</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Visão Geral <span class="grad-text">⚡</span></h1>
+    <p>Bem-vindo, <strong>{{ current_user.nome }}</strong>! Resumo das ordens de serviço.</p>
+  </div>
+  <a href="{{ url_for('os.nova') }}" class="btn btn-primary">
+    ➕ Nova OS
+  </a>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon indigo">📋</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total }}</div>
+      <div class="stat-label">Total de OS</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon info">🔵</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ abertas }}</div>
+      <div class="stat-label">Em Aberto</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning">⚙️</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ andamento }}</div>
+      <div class="stat-label">Em Andamento</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success">✅</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ concluidas }}</div>
+      <div class="stat-label">Concluídas</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon danger">🔴</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ urgentes }}</div>
+      <div class="stat-label">Urgentes</div>
+    </div>
+  </div>
+</div>
+
+<!-- Recentes -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(99,102,241,.15)">📋</div>
+    <h2>Ordens Recentes</h2>
+    <a href="{{ url_for('os.lista') }}" class="btn btn-ghost btn-sm" style="margin-left:auto">Ver todas →</a>
+  </div>
+  <div style="overflow-x:auto">
+    {% if recentes %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nº OS</th>
+          <th>Cliente</th>
+          <th>Status</th>
+          <th>Prioridade</th>
+          <th>Data Entrada</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for os in recentes %}
+        <tr>
+          <td><strong style="color:var(--indigo)">{{ os.numero_os }}</strong></td>
+          <td>{{ os.cliente.nome if os.cliente else '—' }}</td>
+          <td>
+            <span class="badge badge-{{ os.status.lower().replace(' ', '') }}">{{ os.status }}</span>
+          </td>
+          <td>
+            <span class="badge badge-{{ os.prioridade.lower() }}">{{ os.prioridade }}</span>
+          </td>
+          <td>{{ os.data_entrada.strftime('%d/%m/%Y') if os.data_entrada else '—' }}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="verOS({{ os.id }})">👁 Ver</button>
+              <button class="btn btn-danger btn-sm" onclick="desativarOS({{ os.id }})">🗑</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>Nenhuma OS cadastrada</h3>
+      <p>Clique em "Nova OS" para começar.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<a href="{{ url_for('os.nova') }}" class="btn btn-primary">➕ Nova OS</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function verOS(id) {
+    window.location.href = '{{ url_for("os.lista") }}?id=' + id;
+  }
+
+  async function desativarOS(id) {
+    if (!confirm('Desativar esta OS? (soft delete — dados mantidos)')) return;
+    const r = await fetch(`/api/os/${id}`, { method: 'DELETE' });
+    if (r.ok) {
+      showToast('OS desativada.', 'aviso');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showToast('Erro ao desativar.', 'erro');
+    }
+  }
+</script>
+{% endblock %}

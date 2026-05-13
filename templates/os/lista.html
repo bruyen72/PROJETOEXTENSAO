@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Ordens de Serviço{% endblock %}
+{% block page_title %}<span class="grad-text">Ordens de Serviço</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Ordens de Serviço</h1>
+    <p>Gerencie todas as OS — clique para abrir, filtrar ou exportar</p>
+  </div>
+  <a href="{{ url_for('os.nova') }}" class="btn btn-primary">➕ Nova OS</a>
+</div>
+
+<!-- Filtros -->
+<div class="filter-bar">
+  <input type="text" id="busca" class="form-control" placeholder="🔍  Buscar por OS ou defeito…" oninput="filtrarLista()">
+  <select id="filtro-status" class="form-control" onchange="filtrarLista()">
+    <option value="">Todos os status</option>
+    <option value="Aberto">Aberto</option>
+    <option value="Em Andamento">Em Andamento</option>
+    <option value="Concluido">Concluído</option>
+    <option value="Cancelado">Cancelado</option>
+  </select>
+  <select id="filtro-prioridade" class="form-control" onchange="filtrarLista()">
+    <option value="">Todas as prioridades</option>
+    <option value="Baixa">Baixa</option>
+    <option value="Media">Média</option>
+    <option value="Urgente">Urgente</option>
+  </select>
+  <select id="filtro-cliente" class="form-control" onchange="filtrarLista()">
+    <option value="">Todos os clientes</option>
+    {% for c in clientes %}
+    <option value="{{ c.id }}">{{ c.nome }}</option>
+    {% endfor %}
+  </select>
+  <select id="filtro-ordem" class="form-control" onchange="filtrarLista()">
+    <option value="recente">Mais recentes</option>
+    <option value="antiga">Mais antigas</option>
+  </select>
+</div>
+
+<div id="lista-container">
+  <div class="empty-state">
+    <div class="empty-icon">⏳</div>
+    <h3>Carregando ordens…</h3>
+  </div>
+</div>
+
+<div id="paginacao" style="display:flex;justify-content:center;gap:8px;margin-top:20px"></div>
+{% endblock %}
+
+{% block footer %}
+<span id="contador-lista" style="font-size:.85rem;color:var(--text-2)">0 OS</span>
+<a href="{{ url_for('os.nova') }}" class="btn btn-primary">➕ Nova OS</a>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/lista.js') }}"></script>
+{% endblock %}

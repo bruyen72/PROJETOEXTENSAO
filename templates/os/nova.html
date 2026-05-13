@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% block title %}Nova OS{% endblock %}
+{% block page_title %}<span class="grad-text">Nova Ordem de Serviço</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Nova OS</h1>
+    <p>Preencha os dados do atendimento técnico</p>
+  </div>
+  <div class="progress-wrap" style="max-width:280px;flex:1">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <span class="progress-label" id="progress-label">0/12 testes</span>
+  </div>
+</div>
+
+<form id="form-os" novalidate>
+
+  <!-- 1. Identificação -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <span class="section-title">Identificação do Chamado</span>
+    </div>
+    <div class="section-body">
+      <div class="grid-3">
+        <div class="form-group">
+          <label class="form-label">Nº OS<span class="req">*</span></label>
+          <input type="text" id="numero_os" class="form-control" placeholder="OS-2026-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data Entrada<span class="req">*</span></label>
+          <input type="date" id="data_entrada" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Entrada</label>
+          <input type="time" id="hora_entrada" class="form-control">
+        </div>
+        <div class="form-group col-2">
+          <label class="form-label">Cliente<span class="req">*</span></label>
+          <select id="cliente_id" class="form-control" required>
+            <option value="">Selecione o cliente…</option>
+            {% for c in clientes %}
+            <option value="{{ c.id }}">{{ c.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de Ocorrência</label>
+          <select id="tipo_ocorrencia" class="form-control">
+            <option value="">Selecione…</option>
+            <option>Preventiva</option>
+            <option>Manutenção</option>
+            <option>Corretiva</option>
+          </select>
+        </div>
+        <div class="form-group col-2">
+          <label class="form-label">Responsável / Contato</label>
+          <input type="text" id="responsavel" class="form-control" placeholder="Nome do responsável">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input type="text" id="telefone" class="form-control" placeholder="(65) 99999-9999">
+        </div>
+        <div class="form-group col-2">
+          <label class="form-label">Técnico Responsável</label>
+          <select id="tecnico_id" class="form-control">
+            <option value="">Não atribuído</option>
+            {% for t in tecnicos %}
+            <option value="{{ t.id }}">{{ t.usuario.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contrato</label>
+          <input type="text" id="contrato" class="form-control" placeholder="CTR-001">
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <p class="form-label" style="margin-bottom:8px">Prioridade</p>
+        <div class="priority-wrap">
+          <button type="button" class="priority-btn" data-nivel="baixa">🟢 Baixa</button>
+          <button type="button" class="priority-btn" data-nivel="media">🟡 Média</button>
+          <button type="button" class="priority-btn" data-nivel="urgente">🔴 Urgente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Equipamento -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <span class="section-title">Dados do Equipamento</span>
+    </div>
+    <div class="section-body">
+      <div class="grid-3">
+        <div class="form-group">
+          <label class="form-label">Tipo<span class="req">*</span></label>
+          <input type="text" id="equip_tipo" class="form-control" placeholder="Rádio Portátil">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Marca<span class="req">*</span></label>
+          <input type="text" id="equip_marca" class="form-control" placeholder="HYTERA, Motorola…">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modelo<span class="req">*</span></label>
+          <input type="text" id="equip_modelo" class="form-control" placeholder="PD-506">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nº de Série<span class="req">*</span></label>
+          <input type="text" id="equip_serie" class="form-control" placeholder="14621A1355">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cor / Identificação</label>
+          <input type="text" id="equip_cor" class="form-control" placeholder="Preto — etiqueta 01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Canal / Frequência</label>
+          <input type="text" id="equip_canal" class="form-control" placeholder="Canal 5 / 462.550 MHz">
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <p class="form-label" style="margin-bottom:8px">Acessórios Recebidos</p>
+        <div class="chips-wrap">
+          <span class="chip" data-nome="Antena">📡 Antena</span>
+          <span class="chip" data-nome="Bateria">🔋 Bateria</span>
+          <span class="chip" data-nome="Clip">📎 Clip</span>
+          <span class="chip" data-nome="Fone">🎧 Fone</span>
+          <span class="chip" data-nome="Carregador">🔌 Carregador</span>
+          <span class="chip" data-nome="Case">📦 Case</span>
+          <span class="chip" data-nome="Cabo">🖥️ Cabo</span>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label class="form-label">Outros acessórios / Nível de bateria</label>
+          <input type="text" id="acessorios_outros" class="form-control" placeholder="Ex.: cabo USB, bateria 96%">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Condição & Defeito -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <span class="section-title">Condição & Defeito</span>
+    </div>
+    <div class="section-body">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Condições Físicas</label>
+          <textarea id="condicoes_fisicas" class="form-control" placeholder="Descreva o estado físico do equipamento…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Defeito Relatado<span class="req">*</span></label>
+          <textarea id="defeito_relatado" class="form-control" placeholder="Descreva o defeito relatado pelo cliente…"></textarea>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <p class="form-label" style="margin-bottom:8px">Status do Equipamento</p>
+        <div class="status-wrap">
+          <button type="button" class="status-btn" data-status="Funcionando">✅ Funcionando</button>
+          <button type="button" class="status-btn" data-status="Em Diagnóstico">⚠️ Em Diagnóstico</button>
+          <button type="button" class="status-btn" data-status="Em Reparo">🔧 Em Reparo</button>
+          <button type="button" class="status-btn" data-status="Aguardando Retirada">✔️ Ag. Retirada</button>
+          <button type="button" class="status-btn" data-status="Sem Conserto">❌ Sem Conserto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Checklist -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <span class="section-title">Checklist de Testes</span>
+    </div>
+    <div class="section-body">
+      <div class="checklist" id="checklist-container"></div>
+    </div>
+  </div>
+
+  <!-- 5. Laudo -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <span class="section-title">Laudo Técnico & Solução</span>
+    </div>
+    <div class="section-body">
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">Data Conclusão</label>
+          <input type="date" id="data_conclusao" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status da OS</label>
+          <select id="status_os" class="form-control">
+            <option value="Aberto">Aberto</option>
+            <option value="Em Andamento">Em Andamento</option>
+            <option value="Concluido">Concluído</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-1">
+        <div class="form-group">
+          <label class="form-label">Laudo / Diagnóstico</label>
+          <textarea id="laudo_tecnico" class="form-control lg" placeholder="Diagnóstico técnico completo…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Solução Aplicada</label>
+          <textarea id="solucao_aplicada" class="form-control" placeholder="O que foi feito para resolver…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Peças Utilizadas</label>
+          <textarea id="pecas_utilizadas" class="form-control" placeholder="Ex.: Conector SMA — R$ 15,00"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Termos / Observações</label>
+          <textarea id="termos_observacoes" class="form-control" placeholder="Garantia, instruções, observações…"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Fotos -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">6</div>
+      <span class="section-title">Fotos do Equipamento</span>
+    </div>
+    <div class="section-body">
+      <div class="fotos-drop" id="fotos-drop" onclick="document.getElementById('foto-input').click()">
+        <div class="drop-icon">📸</div>
+        <p><strong>Clique ou arraste</strong> fotos aqui</p>
+        <p style="font-size:.78rem;margin-top:4px">PNG, JPG, WEBP — máx. 20 MB</p>
+      </div>
+      <input type="file" id="foto-input" accept="image/*" multiple capture="environment" style="display:none">
+      <div class="fotos-grid" id="fotos-grid"></div>
+    </div>
+  </div>
+
+  <!-- 7. Localização -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">7</div>
+      <span class="section-title">Localização do Atendimento</span>
+    </div>
+    <div class="section-body">
+      <div class="geo-area">
+        <div class="geo-top">
+          <button type="button" class="btn btn-secondary" onclick="capturarGeo()">📍 Capturar Localização</button>
+          <span class="geo-status" id="geo-status">Aguardando…</span>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="text" id="geo-lat" class="form-control" readonly placeholder="—">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="text" id="geo-lng" class="form-control" readonly placeholder="—">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Endereço (editável)</label>
+          <input type="text" id="geo-endereco" class="form-control" placeholder="Rua, número, bairro, cidade…">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Assinaturas -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-number">8</div>
+      <span class="section-title">Assinaturas Digitais</span>
+    </div>
+    <div class="section-body">
+      <div class="sigs-wrap">
+        <div class="sig-box">
+          <span class="sig-label">Assinatura do Cliente</span>
+          <div class="sig-canvas-wrap"><canvas id="sig-cliente"></canvas></div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="clearSig('sig-cliente')">🗑 Limpar</button>
+        </div>
+        <div class="sig-box">
+          <span class="sig-label">Assinatura do Técnico</span>
+          <div class="sig-canvas-wrap"><canvas id="sig-tecnico"></canvas></div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="clearSig('sig-tecnico')">🗑 Limpar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block footer %}
+<button type="button" class="btn btn-ghost" onclick="limparForm()">🗑 Limpar</button>
+<button type="button" class="btn btn-secondary" onclick="salvarOffline()">💾 Salvar (offline)</button>
+<button type="button" class="btn btn-primary" onclick="salvarOS()">☁️ Salvar no Servidor</button>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/sig.js') }}"></script>
+<script src="{{ url_for('static', filename='js/geo.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
