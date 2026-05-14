@@ -1,52 +1,52 @@
 /* ============================================================
-   GERENCIADOR OS — Design System "Signal Electric"
-   Paleta: Verde Elétrico · Branco · Preto sobre fundo radar
+   GERENCIADOR OS — Design System "Professional Green"
+   Paleta: Verde Maduro · Branco · Escuro Elegante
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
 /* ─── Tokens ──────────────────────────────────────────────── */
 :root {
-  --bg:          #010801;
-  --surface:     rgba(5,18,5,.92);
-  --surface-2:   rgba(10,26,10,.95);
-  --card:        rgba(0,230,118,.04);
-  --card-hover:  rgba(0,230,118,.09);
+  --bg:        #06110a;
+  --surface:   rgba(8,22,12,.94);
+  --surface-2: rgba(12,28,16,.96);
+  --card:      rgba(255,255,255,.04);
+  --card-hover:rgba(255,255,255,.07);
 
-  --primary:   #00e676;
-  --primary-d: #00b85a;
-  --primary-l: #69ff9e;
-  --forest:    #002d12;
-  --forest-d:  #001208;
+  --primary:   #16a34a;
+  --primary-d: #15803d;
+  --primary-l: #22c55e;
+  --primary-xl: #4ade80;
+  --white:     #ffffff;
 
-  --grad:        linear-gradient(135deg,#00b85a,#00e676,#69ff9e);
-  --grad-subtle: linear-gradient(135deg,rgba(0,230,118,.14),rgba(105,255,158,.06));
-  --grad-h:      linear-gradient(90deg,rgba(0,230,118,.10),rgba(105,255,158,.05));
+  --grad:        linear-gradient(135deg,#15803d,#16a34a,#22c55e);
+  --grad-subtle: linear-gradient(135deg,rgba(22,163,74,.12),rgba(34,197,94,.06));
+  --grad-h:      linear-gradient(90deg,rgba(22,163,74,.08),rgba(34,197,94,.04));
 
-  --success: #00e676;
-  --warning: #ffd740;
-  --danger:  #ff5252;
-  --info:    #40c4ff;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger:  #dc2626;
+  --info:    #0284c7;
 
-  --text:    #f0fff4;
-  --text-2:  #a0f0c4;
-  --text-3:  #4ade80;
-  --text-dim: #2d7a4f;
+  --text:    #f1f5f2;
+  --text-2:  #c4d4c8;
+  --text-3:  #86a892;
+  --text-dim: #4d7a5c;
 
-  --border:       rgba(0,230,118,.16);
-  --border-hover: rgba(0,230,118,.42);
+  --border:       rgba(255,255,255,.09);
+  --border-hover: rgba(22,163,74,.35);
 
-  --glow:      0 0 40px rgba(0,230,118,.38);
-  --glow-l:    0 0 60px rgba(105,255,158,.25);
-  --shadow:    0 8px 32px rgba(0,0,0,.72);
-  --shadow-lg: 0 20px 60px rgba(0,0,0,.85);
+  --glow:      0 0 24px rgba(22,163,74,.22);
+  --glow-sm:   0 0 12px rgba(22,163,74,.18);
+  --shadow:    0 4px 24px rgba(0,0,0,.50);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,.65);
 
-  --font:    'Inter', sans-serif;
-  --font-d:  'Space Grotesk', sans-serif;
-  --radius:  16px;
-  --radius-sm: 10px;
-  --sidebar: 260px;
-  --header:  64px;
+  --font:      'Inter', sans-serif;
+  --font-d:    'Space Grotesk', sans-serif;
+  --radius:    14px;
+  --radius-sm: 9px;
+  --sidebar:   260px;
+  --header:    62px;
 }
 
 /* ─── Canvas Background ───────────────────────────────────── */
@@ -101,10 +101,10 @@ button { cursor: pointer; }
   top: 0; left: 0;
   width: var(--sidebar);
   height: 100vh;
-  background: rgba(1,10,1,.88);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border-right: 1px solid rgba(0,230,118,.16);
+  background: rgba(5,14,8,.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(255,255,255,.07);
   display: flex;
   flex-direction: column;
   z-index: 200;
@@ -121,17 +121,16 @@ button { cursor: pointer; }
 }
 
 .sidebar-logo .logo-icon {
-  width: 42px; height: 42px;
+  width: 38px; height: 38px;
   background: var(--grad);
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
-  box-shadow: var(--glow), 0 0 0 1px rgba(0,230,118,.3) inset;
-  color: #000;
-  animation: logoPulse 4s ease-in-out infinite;
+  box-shadow: var(--glow-sm);
+  color: #fff;
 }
 
 .sidebar-logo .logo-text {
@@ -184,10 +183,9 @@ button { cursor: pointer; }
 }
 
 .nav-item.active {
-  background: rgba(0,230,118,.14);
-  color: var(--primary);
+  background: rgba(22,163,74,.14);
+  color: var(--primary-l);
   font-weight: 600;
-  box-shadow: 0 0 12px rgba(0,230,118,.12) inset;
 }
 
 .nav-item.active::before {
@@ -195,9 +193,8 @@ button { cursor: pointer; }
   position: absolute;
   left: 0; top: 6px; bottom: 6px;
   width: 3px;
-  background: var(--primary);
+  background: var(--primary-l);
   border-radius: 0 3px 3px 0;
-  box-shadow: 0 0 8px var(--primary);
 }
 
 .nav-item .nav-icon {
@@ -251,9 +248,8 @@ button { cursor: pointer; }
   justify-content: center;
   font-weight: 700;
   font-size: .88rem;
-  color: #000;
+  color: #fff;
   flex-shrink: 0;
-  box-shadow: var(--glow);
 }
 
 .avatar.lg { width: 48px; height: 48px; font-size: 1.1rem; }
@@ -268,10 +264,10 @@ button { cursor: pointer; }
   left: var(--sidebar);
   right: 0;
   height: var(--header);
-  background: rgba(1,8,1,.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(0,230,118,.18);
+  background: rgba(5,12,7,.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,.07);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -367,11 +363,11 @@ button { cursor: pointer; }
 
 /* ─── Card ────────────────────────────────────────────────── */
 .card {
-  background: rgba(0,230,118,.04);
-  border: 1px solid rgba(0,230,118,.16);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: var(--radius);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 
@@ -412,10 +408,10 @@ button { cursor: pointer; }
 }
 
 .stat-card {
-  background: rgba(0,230,118,.05);
-  border: 1px solid rgba(0,230,118,.18);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--radius);
   padding: 20px;
   display: flex;
@@ -432,7 +428,7 @@ button { cursor: pointer; }
   top: 0; left: 0; right: 0;
   height: 2px;
   background: var(--grad);
-  box-shadow: 0 0 12px rgba(0,230,118,.5);
+  opacity: .7;
 }
 
 .stat-card:hover {
@@ -504,16 +500,16 @@ button { cursor: pointer; }
 .btn i { font-size: 1.05rem; line-height: 1; }
 
 .btn-primary {
-  background: var(--grad);
-  color: #000;
-  font-weight: 700;
-  box-shadow: 0 4px 20px rgba(0,230,118,.4), 0 0 0 1px rgba(0,230,118,.2) inset;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(22,163,74,.30);
 }
 .btn-primary:hover {
-  opacity: .9;
+  background: var(--primary-d);
   transform: translateY(-1px);
-  box-shadow: 0 0 30px rgba(0,230,118,.55), 0 4px 20px rgba(0,230,118,.4);
-  color: #000;
+  box-shadow: 0 4px 18px rgba(22,163,74,.35);
+  color: #fff;
 }
 
 .btn-secondary {
@@ -619,8 +615,8 @@ button { cursor: pointer; }
 
 .form-control:focus {
   border-color: var(--primary);
-  background: rgba(34,197,94,.05);
-  box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+  background: rgba(22,163,74,.06);
+  box-shadow: 0 0 0 3px rgba(22,163,74,.15);
 }
 
 .form-control::placeholder { color: var(--text-dim); opacity: .7; }
@@ -639,10 +635,10 @@ select.form-control option { background: var(--surface-2); color: var(--text); }
 
 /* ─── Section Card ────────────────────────────────────────── */
 .section-card {
-  background: rgba(0,230,118,.04);
-  border: 1px solid rgba(0,230,118,.16);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-radius: var(--radius);
   overflow: hidden;
   margin-bottom: 20px;
@@ -923,10 +919,10 @@ select.form-control option { background: var(--surface-2); color: var(--text); }
   position: fixed;
   bottom: 0; left: var(--sidebar); right: 0;
   z-index: 100;
-  background: rgba(1,8,1,.90);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border-top: 1px solid rgba(0,230,118,.18);
+  background: rgba(5,12,7,.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,.07);
   padding: 10px 28px;
   display: flex;
   align-items: center;
@@ -1026,11 +1022,11 @@ table.data-table {
 }
 
 .modal {
-  background: rgba(1,12,1,.90);
-  border: 1px solid rgba(0,230,118,.22);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-radius: 20px;
+  background: rgba(6,16,9,.94);
+  border: 1px solid rgba(255,255,255,.09);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-radius: 18px;
   width: 100%;
   max-width: 540px;
   max-height: 90vh;
@@ -1159,37 +1155,17 @@ table.data-table {
 }
 
 .login-box {
-  background: rgba(1,12,1,.82);
-  border: 1px solid rgba(0,230,118,.28);
-  border-radius: 24px;
+  background: rgba(6,18,10,.88);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 20px;
   padding: 48px 44px;
   width: 100%;
-  max-width: 430px;
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
-  box-shadow:
-    0 0 0 1px rgba(0,230,118,.08) inset,
-    0 0 60px rgba(0,230,118,.12),
-    var(--shadow-lg);
+  max-width: 420px;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow: var(--shadow-lg);
   position: relative;
   z-index: 2;
-}
-
-/* Neon border glow animation */
-.login-box::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 25px;
-  background: linear-gradient(135deg, rgba(0,230,118,.3), transparent, rgba(0,230,118,.15));
-  z-index: -1;
-  animation: loginBorder 4s linear infinite;
-}
-
-@keyframes loginBorder {
-  0%   { opacity: .6; }
-  50%  { opacity: 1; }
-  100% { opacity: .6; }
 }
 
 .login-logo {
@@ -1201,37 +1177,28 @@ table.data-table {
 }
 
 .login-logo .logo-circle {
-  width: 80px; height: 80px;
-  border-radius: 22px;
+  width: 68px; height: 68px;
+  border-radius: 18px;
   background: var(--grad);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.4rem;
-  box-shadow:
-    var(--glow),
-    0 0 60px rgba(0,230,118,.25);
-  color: #000;
-  animation: logoPulse 3s ease-in-out infinite;
-}
-
-@keyframes logoPulse {
-  0%, 100% { box-shadow: var(--glow), 0 0 30px rgba(0,230,118,.2); }
-  50%       { box-shadow: 0 0 60px rgba(0,230,118,.55), 0 0 100px rgba(0,230,118,.2); }
+  font-size: 2rem;
+  box-shadow: var(--glow-sm);
+  color: #fff;
 }
 
 .login-logo h1 {
   font-family: var(--font-d);
-  font-weight: 800;
-  font-size: 1.5rem;
+  font-weight: 700;
+  font-size: 1.45rem;
   text-align: center;
   color: var(--text);
-  text-shadow: 0 0 20px rgba(0,230,118,.3);
 }
 
 .login-logo p { color: var(--text-2); font-size: .85rem; text-align: center; }
 
-.form-divider { height: 1px; background: rgba(0,230,118,.18); margin: 24px 0; }
+.form-divider { height: 1px; background: rgba(255,255,255,.08); margin: 24px 0; }
 
 /* ─── Offline Indicator ───────────────────────────────────── */
 .offline-banner {
@@ -1255,10 +1222,10 @@ body.offline .offline-banner { display: flex; }
   position: fixed;
   top: var(--header); right: 0;
   width: 340px;
-  background: rgba(1,10,1,.92);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border-left: 1px solid rgba(0,230,118,.18);
+  background: rgba(6,14,9,.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(255,255,255,.07);
   height: calc(100vh - var(--header));
   overflow-y: auto;
   z-index: 150;
@@ -1394,12 +1361,6 @@ body.offline .offline-banner { display: flex; }
 .empty-state .empty-icon i { font-size: 4rem; }
 .empty-state h3 { font-family: var(--font-d); margin-bottom: 8px; color: var(--text); }
 .empty-state p  { font-size: .88rem; }
-
-/* ─── Logo pulse ──────────────────────────────────────────── */
-@keyframes logoPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0,230,118,.35), 0 0 0 1px rgba(0,230,118,.2) inset; }
-  50%       { box-shadow: 0 0 50px rgba(0,230,118,.60), 0 0 80px rgba(0,230,118,.18), 0 0 0 1px rgba(0,230,118,.3) inset; }
-}
 
 /* ─── Animated gradient text ──────────────────────────────── */
 .grad-text {
