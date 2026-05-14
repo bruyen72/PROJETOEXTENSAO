@@ -1,10 +1,20 @@
 import json
+import os
 from datetime import date, datetime
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
-from models import db, OrdemServico, Cliente, Tecnico, Equipamento, OsAcessorio, OsChecklist, OsAssinatura, Notificacao
+from werkzeug.utils import secure_filename
+from models import db, OrdemServico, Cliente, Tecnico, Equipamento, OsAcessorio, OsChecklist, OsAssinatura, Notificacao, OsFoto
 
 os_bp = Blueprint('os', __name__)
+
+# ── Domínios válidos (RN07, RN08) ─────────────────────────
+PRIORIDADES    = ('Baixa', 'Média', 'Urgente')
+TIPOS_OCORRENCIA = ('Preventiva', 'Manutenção', 'Corretiva')
+EXTENSOES_FOTO = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'}
+
+def extensao_valida(nome):
+    return '.' in nome and nome.rsplit('.', 1)[1].lower() in EXTENSOES_FOTO
 
 CHECKLIST_PADRAO = [
     {'id': 'bat',  'nome': 'Teste de Bateria / Carga'},
@@ -69,14 +79,25 @@ def criar():
     if not data.get('data_entrada'):
         return jsonify({'erro': 'Data de entrada é obrigatória (RN02)'}), 422
 
+    # RN07 — Validar prioridade
+    prioridade = data.get('prioridade', 'Baixa')
+    if prioridade not in PRIORIDADES:
+        return jsonify({'erro': f'Prioridade inválida. Valores aceitos: {", ".join(PRIORIDADES)}'}), 422
+
+    # RN08 — Validar tipo de ocorrência
+    tipo_ocorrencia = data.get('tipo_ocorrencia')
+    if tipo_ocorrencia and tipo_ocorrencia not in TIPOS_OCORRENCIA:
+        return jsonify({'erro': f'Tipo de ocorrência inválido. Valores aceitos: {", ".join(TIPOS_OCORRENCIA)}'}), 422
+
     numero_os = data.get('numero_os') or f"OS-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
     os_obj = OrdemServico(
         numero_os          = numero_os,
         descricao          = data.get('descricao'),
         status             = data.get('status', 'Aberto'),
-        prioridade         = data.get('prioridade', 'Baixa'),
-        tipo_ocorrencia    = data.get('tipo_ocorrencia'),
+        prioridade         = prioridade,
+        tipo_ocorrencia    = tipo_ocorrencia,
+        acompanhante       = data.get('acompanhante'),  # RF12
         data_entrada       = date.fromisoformat(data['data_entrada']),
         hora_entrada       = data.get('hora_entrada'),
         condicoes_fisicas  = data.get('condicoes_fisicas'),
@@ -173,13 +194,19 @@ def editar(os_id):
     os_obj = OrdemServico.query.filter_by(id=os_id, ativo=True).first_or_404()
     data   = request.get_json()
 
-    campos = ['descricao','status','prioridade','tipo_ocorrencia','hora_entrada',
-              'condicoes_fisicas','defeito_relatado','status_equipamento',
+    campos = ['descricao','status','prioridade','tipo_ocorrencia','acompanhante',
+              'hora_entrada','condicoes_fisicas','defeito_relatado','status_equipamento',
               'laudo_tecnico','solucao_aplicada','pecas_utilizadas',
               'termos_observacoes','geo_lat','geo_lng','geo_endereco','tecnico_id']
 
     for campo in campos:
         if campo in data:
+            # RN07 — validar prioridade na edição
+            if campo == 'prioridade' and data[campo] not in PRIORIDADES:
+                return jsonify({'erro': f'Prioridade inválida. Use: {", ".join(PRIORIDADES)}'}), 422
+            # RN08 — validar tipo_ocorrencia na edição
+            if campo == 'tipo_ocorrencia' and data[campo] and data[campo] not in TIPOS_OCORRENCIA:
+                return jsonify({'erro': f'Tipo de ocorrência inválido. Use: {", ".join(TIPOS_OCORRENCIA)}'}), 422
             setattr(os_obj, campo, data[campo])
 
     if 'data_saida' in data and data['data_saida']:
@@ -196,3 +223,68 @@ def desativar(os_id):
     os_obj.desativar()
     db.session.commit()
     return jsonify({'ok': True, 'mensagem': 'OS desativada (soft delete)'})
+
+
+# ── RF27/RF28 — Upload de fotos ───────────────────────────
+
+@os_bp.route('/<int:os_id>/fotos', methods=['GET'])
+@login_required
+def listar_fotos(os_id):
+    OrdemServico.query.filter_by(id=os_id, ativo=True).first_or_404()
+    fotos = OsFoto.query.filter_by(os_id=os_id).all()
+    return jsonify([{
+        'id':           f.id,
+        'nome_arquivo': f.nome_arquivo,
+        'url':          f'/static/uploads/{f.nome_arquivo}',
+        'tamanho_bytes': f.tamanho_bytes,
+        'criado_em':    f.criado_em.isoformat(),
+    } for f in fotos])
+
+
+@os_bp.route('/<int:os_id>/fotos', methods=['POST'])
+@login_required
+def upload_foto(os_id):
+    OrdemServico.query.filter_by(id=os_id, ativo=True).first_or_404()
+
+    if 'foto' not in request.files:
+        return jsonify({'erro': 'Nenhum arquivo enviado'}), 400
+
+    arquivo = request.files['foto']
+    if arquivo.filename == '':
+        return jsonify({'erro': 'Nome de arquivo vazio'}), 400
+    if not extensao_valida(arquivo.filename):
+        return jsonify({'erro': f'Extensão não permitida. Use: {", ".join(EXTENSOES_FOTO)}'}), 422
+
+    upload_dir = current_app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_dir, exist_ok=True)
+
+    ext      = arquivo.filename.rsplit('.', 1)[1].lower()
+    nome     = secure_filename(f"os{os_id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}.{ext}")
+    caminho  = os.path.join(upload_dir, nome)
+    arquivo.save(caminho)
+    tamanho  = os.path.getsize(caminho)
+
+    foto = OsFoto(os_id=os_id, nome_arquivo=nome, caminho=caminho, tamanho_bytes=tamanho)
+    db.session.add(foto)
+    db.session.commit()
+
+    return jsonify({
+        'id':           foto.id,
+        'nome_arquivo': nome,
+        'url':          f'/static/uploads/{nome}',
+        'tamanho_bytes': tamanho,
+    }), 201
+
+
+@os_bp.route('/<int:os_id>/fotos/<int:foto_id>', methods=['DELETE'])
+@login_required
+def remover_foto(os_id, foto_id):
+    foto = OsFoto.query.filter_by(id=foto_id, os_id=os_id).first_or_404()
+    try:
+        if os.path.exists(foto.caminho):
+            os.remove(foto.caminho)
+    except OSError:
+        pass
+    db.session.delete(foto)
+    db.session.commit()
+    return jsonify({'ok': True})

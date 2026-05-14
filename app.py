@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, jsonify, redirect, url_for
 from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
+from sqlalchemy import text
 from config import ActiveConfig
 from models import db, Usuario
 
@@ -67,6 +68,7 @@ def create_app(config=None):
     with app.app_context():
         try:
             db.create_all()
+            _migrar_colunas()
             _criar_admin_padrao()
             print("✓ Banco de dados inicializado com sucesso.")
         except Exception as e:
@@ -79,6 +81,23 @@ def create_app(config=None):
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(Usuario, int(user_id))
+
+
+def _migrar_colunas():
+    """Adiciona colunas novas sem quebrar tabelas existentes (PostgreSQL e SQLite)."""
+    try:
+        with db.engine.connect() as conn:
+            # RF12 — campo acompanhante
+            try:
+                conn.execute(text(
+                    "ALTER TABLE ordem_servico ADD COLUMN acompanhante VARCHAR(150)"
+                ))
+                conn.commit()
+                print("✓ Coluna 'acompanhante' adicionada.")
+            except Exception:
+                pass  # já existe — normal
+    except Exception as e:
+        print(f"  Migração ignorada: {e}")
 
 
 def _criar_admin_padrao():

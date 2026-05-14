@@ -122,6 +122,7 @@ class OrdemServico(db.Model):
     data_entrada       = db.Column(db.Date,   nullable=False)
     hora_entrada       = db.Column(db.Time)
     data_saida         = db.Column(db.Date)
+    acompanhante       = db.Column(db.String(150))  # RF12 — quem acompanhou a execução
     condicoes_fisicas  = db.Column(db.Text)
     defeito_relatado   = db.Column(db.Text)
     status_equipamento = db.Column(db.String(50))
@@ -160,6 +161,7 @@ class OrdemServico(db.Model):
             'id': self.id, 'numero_os': self.numero_os,
             'status': self.status, 'prioridade': self.prioridade,
             'tipo_ocorrencia': self.tipo_ocorrencia,
+            'acompanhante': self.acompanhante,
             'data_entrada': self.data_entrada.isoformat() if self.data_entrada else None,
             'data_saida': self.data_saida.isoformat() if self.data_saida else None,
             'cliente_id': self.cliente_id,
