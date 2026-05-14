@@ -38,7 +38,7 @@ def _heading(doc, texto, level=1):
 
 
 def gerar_word_os(os_obj, upload_folder):
-    nome    = f"OS-{os_obj.numero_os}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.docx"
+    nome    = f"{os_obj.numero_os}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.docx"
     caminho = os.path.join(upload_folder, nome)
 
     doc = Document()

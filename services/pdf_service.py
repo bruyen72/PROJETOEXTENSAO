@@ -23,7 +23,7 @@ INFO     = colors.HexColor('#0284c7')
 
 
 def gerar_pdf_os(os_obj, upload_folder):
-    nome    = f"OS-{os_obj.numero_os}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.pdf"
+    nome    = f"{os_obj.numero_os}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.pdf"
     caminho = os.path.join(upload_folder, nome)
     os.makedirs(upload_folder, exist_ok=True)
 
