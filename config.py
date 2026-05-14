@@ -20,13 +20,15 @@ class SQLiteConfig(Config):
 
 
 class SupabaseConfig(Config):
-    # Monta a URL usando SQLAlchemy — trata qualquer caractere especial na senha
+    # Supabase Transaction Pooler — IPv4, porta 6543
+    # DB_USER deve ser: postgres.SEU_REF  ex: postgres.aiugalructdnxrcrqnhj
+    # DB_PASS: senha do banco (aceita @ e outros caracteres especiais)
     SQLALCHEMY_DATABASE_URI = URL.create(
         drivername = 'postgresql+psycopg2',
         username   = os.environ.get('DB_USER', 'postgres'),
         password   = os.environ.get('DB_PASS', ''),
-        host       = os.environ.get('DB_HOST', ''),
-        port       = int(os.environ.get('DB_PORT', '5432')),
+        host       = os.environ.get('DB_HOST', 'aws-0-sa-east-1.pooler.supabase.com'),
+        port       = 6543,   # fixo — Transaction Pooler sempre 6543
         database   = os.environ.get('DB_NAME', 'postgres'),
     )
     SQLALCHEMY_ENGINE_OPTIONS = {
@@ -37,5 +39,5 @@ class SupabaseConfig(Config):
     DEBUG = False
 
 
-# Se DB_HOST estiver definido → Supabase; senão → SQLite local
-ActiveConfig = SupabaseConfig if os.environ.get('DB_HOST') else SQLiteConfig
+# Se DB_USER estiver definido → Supabase; senão → SQLite local
+ActiveConfig = SupabaseConfig if os.environ.get('DB_USER') else SQLiteConfig
