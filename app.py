@@ -65,8 +65,13 @@ def create_app(config=None):
 
     # ── Inicialização do banco ────────────────────────────
     with app.app_context():
-        db.create_all()
-        _criar_admin_padrao()
+        try:
+            db.create_all()
+            _criar_admin_padrao()
+            print("✓ Banco de dados inicializado com sucesso.")
+        except Exception as e:
+            print(f"✗ ERRO ao conectar ao banco: {e}")
+            print("  Verifique a variável DB_PASS no Render.")
 
     return app
 
