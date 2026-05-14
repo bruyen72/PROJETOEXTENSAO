@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#070d07">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1410">
   <meta name="description" content="Gerenciador de Ordens de Serviço para Técnicos de Campo">
   <title>{% block title %}Gerenciador OS{% endblock %} — Campo</title>
 
@@ -11,11 +11,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   {% block extra_css %}{% endblock %}
 </head>
 <body class="has-footer">
+
+<!-- OVERLAY fecha sidebar no mobile -->
+<div id="sidebar-overlay" onclick="fecharSidebar()"></div>
 
 <!-- TOAST -->
 <div id="toast-container"></div>
@@ -28,33 +30,42 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
+
+  <!-- Cabeçalho do sidebar -->
   <div class="sidebar-logo">
     <div class="logo-icon">
       <i class="ph-bold ph-broadcast"></i>
     </div>
-    <div>
+    <div style="flex:1">
       <div class="logo-text">Gerenciador OS</div>
       <div class="logo-sub">para Campo</div>
     </div>
+    <!-- Botão fechar (só mobile) -->
+    <button class="sidebar-close-btn" onclick="fecharSidebar()" aria-label="Fechar menu">
+      <i class="ph ph-x"></i>
+    </button>
   </div>
 
   <nav class="sidebar-nav">
     <div class="nav-section-label">Principal</div>
 
     <a href="{{ url_for('os.dashboard') }}"
-       class="nav-item {% if request.endpoint == 'os.dashboard' %}active{% endif %}">
+       class="nav-item {% if request.endpoint == 'os.dashboard' %}active{% endif %}"
+       onclick="fecharSidebarMobile()">
       <span class="nav-icon"><i class="ph ph-house-simple"></i></span>
       Dashboard
     </a>
 
     <a href="{{ url_for('os.nova') }}"
-       class="nav-item {% if request.endpoint == 'os.nova' %}active{% endif %}">
+       class="nav-item {% if request.endpoint == 'os.nova' %}active{% endif %}"
+       onclick="fecharSidebarMobile()">
       <span class="nav-icon"><i class="ph ph-plus-circle"></i></span>
       Nova OS
     </a>
 
     <a href="{{ url_for('os.lista') }}"
-       class="nav-item {% if request.endpoint == 'os.lista' %}active{% endif %}">
+       class="nav-item {% if request.endpoint == 'os.lista' %}active{% endif %}"
+       onclick="fecharSidebarMobile()">
       <span class="nav-icon"><i class="ph ph-clipboard-text"></i></span>
       Ordens de Serviço
     </a>
@@ -62,7 +73,8 @@
     <div class="nav-section-label">Cadastros</div>
 
     <a href="{{ url_for('clientes_page.lista') }}"
-       class="nav-item {% if request.blueprint == 'clientes_page' %}active{% endif %}">
+       class="nav-item {% if request.blueprint == 'clientes_page' %}active{% endif %}"
+       onclick="fecharSidebarMobile()">
       <span class="nav-icon"><i class="ph ph-users-three"></i></span>
       Clientes
     </a>
@@ -70,7 +82,8 @@
     <div class="nav-section-label">Sistema</div>
 
     <a href="{{ url_for('notif_page.lista') }}"
-       class="nav-item {% if request.blueprint == 'notif_page' %}active{% endif %}">
+       class="nav-item {% if request.blueprint == 'notif_page' %}active{% endif %}"
+       onclick="fecharSidebarMobile()">
       <span class="nav-icon"><i class="ph ph-bell"></i></span>
       Notificações
       <span class="nav-badge" id="notif-count" style="display:none">0</span>
@@ -78,7 +91,8 @@
 
     {% if current_user.perfil == 'admin' %}
     <a href="{{ url_for('usuarios.lista') }}"
-       class="nav-item {% if request.blueprint == 'usuarios' %}active{% endif %}">
+       class="nav-item {% if request.blueprint == 'usuarios' %}active{% endif %}"
+       onclick="fecharSidebarMobile()">
       <span class="nav-icon"><i class="ph ph-gear-six"></i></span>
       Usuários
     </a>
@@ -92,8 +106,7 @@
         <div class="user-name">{{ current_user.nome }}</div>
         <div class="user-perfil">
           {{ current_user.perfil | capitalize }}
-          &nbsp;·&nbsp;
-          <i class="ph ph-sign-out" style="font-size:.8rem"></i> Sair
+          &nbsp;·&nbsp;<i class="ph ph-sign-out" style="font-size:.8rem"></i> Sair
         </div>
       </div>
     </a>
@@ -103,36 +116,34 @@
 <!-- HEADER -->
 <header class="app-header">
   <div class="header-title">
-    <button onclick="toggleSidebar()"
-            style="background:none;border:none;color:var(--text-2);font-size:1.3rem;cursor:pointer;display:none;padding:4px"
-            id="menu-btn"
-            aria-label="Menu">
-      <i class="ph ph-list"></i>
+    <button id="menu-btn" onclick="toggleSidebar()" aria-label="Abrir menu">
+      <i class="ph ph-list" id="menu-icon"></i>
     </button>
     {% block page_title %}Dashboard{% endblock %}
   </div>
   <div class="header-actions">
-    <button class="notif-btn" id="notif-btn" onclick="toggleNotifDrawer()" title="Notificações" aria-label="Notificações">
+    <button class="notif-btn" onclick="toggleNotifDrawer()" aria-label="Notificações">
       <i class="ph ph-bell"></i>
       <span class="notif-dot" id="notif-dot" style="display:none"></span>
     </button>
-    <div class="avatar" title="{{ current_user.nome }}" style="cursor:default">
-      {{ current_user.nome[0].upper() }}
-    </div>
+    <div class="avatar" title="{{ current_user.nome }}">{{ current_user.nome[0].upper() }}</div>
   </div>
 </header>
 
 <!-- NOTIF DRAWER -->
 <div class="notif-drawer" id="notif-drawer">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px">
-    <strong style="display:flex;align-items:center;gap:8px">
-      <i class="ph ph-bell" style="color:var(--primary)"></i>
-      Notificações
-    </strong>
-    <button onclick="lerTodasNotifs()" class="btn btn-sm btn-ghost">Marcar todas lidas</button>
+  <div class="notif-drawer-head">
+    <strong><i class="ph ph-bell" style="color:var(--primary)"></i> Notificações</strong>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="lerTodasNotifs()" class="btn btn-sm btn-ghost">Marcar lidas</button>
+      <button onclick="fecharNotifDrawer()" class="btn btn-sm btn-ghost btn-icon" aria-label="Fechar">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
   </div>
-  <div id="notif-list"><p style="color:var(--text-2);font-size:.85rem">Carregando...</p></div>
+  <div id="notif-list"><p style="color:var(--text-2);font-size:.85rem;padding:8px">Carregando...</p></div>
 </div>
+<div id="notif-overlay" onclick="fecharNotifDrawer()"></div>
 
 <!-- MAIN -->
 <main class="main-content">
@@ -141,114 +152,145 @@
       <script>document.addEventListener('DOMContentLoaded',()=>showToast({{ message|tojson }},{{ category|tojson }}))</script>
     {% endfor %}
   {% endwith %}
-
   {% block content %}{% endblock %}
 </main>
 
-<!-- FOOTER BAR -->
+<!-- FOOTER BAR (desktop) -->
 <footer class="footer-bar">{% block footer %}{% endblock %}</footer>
 
-<!-- SCRIPTS BASE -->
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <a href="{{ url_for('os.dashboard') }}"
+     class="bottom-nav-item {% if request.endpoint == 'os.dashboard' %}active{% endif %}">
+    <i class="ph ph-house-simple"></i>
+    <span>Início</span>
+  </a>
+  <a href="{{ url_for('os.nova') }}"
+     class="bottom-nav-item {% if request.endpoint == 'os.nova' %}active{% endif %}">
+    <i class="ph ph-plus-circle"></i>
+    <span>Nova OS</span>
+  </a>
+  <a href="{{ url_for('os.lista') }}"
+     class="bottom-nav-item {% if request.endpoint == 'os.lista' %}active{% endif %}">
+    <i class="ph ph-clipboard-text"></i>
+    <span>OS</span>
+  </a>
+  <a href="{{ url_for('clientes_page.lista') }}"
+     class="bottom-nav-item {% if request.blueprint == 'clientes_page' %}active{% endif %}">
+    <i class="ph ph-users-three"></i>
+    <span>Clientes</span>
+  </a>
+  <button class="bottom-nav-item" onclick="toggleSidebar()">
+    <i class="ph ph-list"></i>
+    <span>Menu</span>
+  </button>
+</nav>
+
 <script>
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-  }
+/* ── Sidebar ──────────────────────────────────────────── */
+function toggleSidebar() {
+  const open = document.body.classList.toggle('sidebar-open');
+  document.getElementById('menu-icon').className = open ? 'ph ph-x' : 'ph ph-list';
+}
 
-  if (window.innerWidth <= 768) {
-    document.getElementById('menu-btn').style.display = 'block';
-  }
+function fecharSidebar() {
+  document.body.classList.remove('sidebar-open');
+  document.getElementById('menu-icon').className = 'ph ph-list';
+}
 
-  function showToast(msg, tipo) {
-    tipo = tipo || 'info';
-    const map = { success: 'sucesso', danger: 'erro', warning: 'aviso', error: 'erro' };
-    const cls  = map[tipo] || tipo;
-    const c    = document.getElementById('toast-container');
-    const t    = document.createElement('div');
-    t.className = 'toast ' + cls;
-    const icons = { sucesso: 'check-circle', erro: 'x-circle', aviso: 'warning', info: 'info' };
-    const icon  = icons[cls] || 'info';
-    t.innerHTML = `<i class="ph ph-${icon}" style="font-size:1.1rem;flex-shrink:0"></i><span>${msg}</span>`;
-    c.appendChild(t);
-    setTimeout(() => t.remove(), 3400);
-  }
+function fecharSidebarMobile() {
+  if (window.innerWidth <= 768) fecharSidebar();
+}
 
-  async function carregarNotifs() {
-    try {
-      const r = await fetch('/api/notificacoes/nao-lidas');
-      const d = await r.json();
-      const badge = document.getElementById('notif-count');
-      const dot   = document.getElementById('notif-dot');
-      if (d.count > 0) {
-        if (badge) { badge.textContent = d.count; badge.style.display = ''; }
-        if (dot)   dot.style.display = '';
-      } else {
-        if (badge) badge.style.display = 'none';
-        if (dot)   dot.style.display = 'none';
-      }
-    } catch {}
-  }
+/* ── Toast ────────────────────────────────────────────── */
+function showToast(msg, tipo) {
+  tipo = tipo || 'info';
+  const map  = { success:'sucesso', danger:'erro', warning:'aviso', error:'erro' };
+  const cls  = map[tipo] || tipo;
+  const icons = { sucesso:'check-circle', erro:'x-circle', aviso:'warning', info:'info' };
+  const c    = document.getElementById('toast-container');
+  const t    = document.createElement('div');
+  t.className = 'toast ' + cls;
+  t.innerHTML = `<i class="ph ph-${icons[cls]||'info'}" style="font-size:1.1rem;flex-shrink:0"></i><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3400);
+}
 
-  async function toggleNotifDrawer() {
-    const d = document.getElementById('notif-drawer');
-    d.classList.toggle('open');
-    if (d.classList.contains('open')) await renderNotifs();
-  }
-
-  const NOTIF_ICONS = {
-    info: 'info',
-    success: 'check-circle',
-    warning: 'warning',
-    danger: 'x-circle',
-    urgente: 'fire',
-  };
-
-  async function renderNotifs() {
-    const list = document.getElementById('notif-list');
-    try {
-      const r    = await fetch('/api/notificacoes/');
-      const data = await r.json();
-      if (!data.length) {
-        list.innerHTML = `<div class="empty-state" style="padding:30px 10px">
-          <div class="empty-icon"><i class="ph ph-bell-slash"></i></div>
-          <p>Sem notificações</p>
-        </div>`;
-        return;
-      }
-      list.innerHTML = data.map(n => `
-        <div class="notif-item ${n.lida ? '' : 'nao-lida'}" onclick="lerNotif(${n.id},this)">
-          <div class="notif-msg">${n.mensagem}</div>
-          <div class="notif-time">${new Date(n.criado_em).toLocaleString('pt-BR')}</div>
-        </div>
-      `).join('');
-    } catch {
-      list.innerHTML = '<p style="color:var(--danger)">Erro ao carregar.</p>';
+/* ── Notificações ─────────────────────────────────────── */
+async function carregarNotifs() {
+  try {
+    const r = await fetch('/api/notificacoes/nao-lidas');
+    const d = await r.json();
+    const badge = document.getElementById('notif-count');
+    const dot   = document.getElementById('notif-dot');
+    if (d.count > 0) {
+      if (badge) { badge.textContent = d.count; badge.style.display = ''; }
+      if (dot)   dot.style.display = '';
+    } else {
+      if (badge) badge.style.display = 'none';
+      if (dot)   dot.style.display = 'none';
     }
+  } catch {}
+}
+
+function toggleNotifDrawer() {
+  const open = document.getElementById('notif-drawer').classList.toggle('open');
+  document.getElementById('notif-overlay').classList.toggle('open', open);
+  if (open) renderNotifs();
+}
+
+function fecharNotifDrawer() {
+  document.getElementById('notif-drawer').classList.remove('open');
+  document.getElementById('notif-overlay').classList.remove('open');
+}
+
+async function renderNotifs() {
+  const list = document.getElementById('notif-list');
+  try {
+    const r    = await fetch('/api/notificacoes/');
+    const data = await r.json();
+    if (!data.length) {
+      list.innerHTML = `<div style="text-align:center;padding:28px;color:var(--text-2)">
+        <i class="ph ph-bell-slash" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+        Sem notificações
+      </div>`;
+      return;
+    }
+    list.innerHTML = data.map(n => `
+      <div class="notif-item ${n.lida ? '' : 'nao-lida'}" onclick="lerNotif(${n.id},this)">
+        <div class="notif-msg">${n.mensagem}</div>
+        <div class="notif-time">${new Date(n.criado_em).toLocaleString('pt-BR')}</div>
+      </div>`).join('');
+  } catch {
+    list.innerHTML = '<p style="color:var(--danger);padding:8px">Erro ao carregar.</p>';
   }
+}
 
-  async function lerNotif(id, el) {
-    await fetch(`/api/notificacoes/${id}/ler`, { method: 'PATCH' });
-    el.classList.remove('nao-lida');
-    carregarNotifs();
-  }
+async function lerNotif(id, el) {
+  await fetch(`/api/notificacoes/${id}/ler`, { method: 'PATCH' });
+  el.classList.remove('nao-lida');
+  carregarNotifs();
+}
 
-  async function lerTodasNotifs() {
-    await fetch('/api/notificacoes/ler-todas', { method: 'PATCH' });
-    await renderNotifs();
-    carregarNotifs();
-  }
+async function lerTodasNotifs() {
+  await fetch('/api/notificacoes/ler-todas', { method: 'PATCH' });
+  await renderNotifs();
+  carregarNotifs();
+}
 
-  function atualizarOffline() {
-    document.body.classList.toggle('offline', !navigator.onLine);
-  }
+/* ── Offline ──────────────────────────────────────────── */
+function atualizarOffline() {
+  document.body.classList.toggle('offline', !navigator.onLine);
+}
+window.addEventListener('online',  atualizarOffline);
+window.addEventListener('offline', atualizarOffline);
+atualizarOffline();
 
-  window.addEventListener('online',  atualizarOffline);
-  window.addEventListener('offline', atualizarOffline);
-  atualizarOffline();
-
-  document.addEventListener('DOMContentLoaded', () => {
-    carregarNotifs();
-    setInterval(carregarNotifs, 30000);
-  });
+/* ── Init ─────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  carregarNotifs();
+  setInterval(carregarNotifs, 30000);
+});
 </script>
 
 <script>

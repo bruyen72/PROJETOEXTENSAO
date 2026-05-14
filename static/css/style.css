@@ -1578,7 +1578,123 @@ body.offline .offline-banner { display: flex; }
 .error-desc { color: var(--text-2); margin-bottom: 32px; }
 
 /* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
+   MOBILE — Sidebar Overlay + Bottom Nav + Menu Button
+══════════════════════════════════════════════════════════════ */
+
+/* ─── Menu button (hamburguer) ──────────────────────────── */
+#menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.75);
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background .2s, color .2s;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+#menu-btn:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+/* ─── Sidebar overlay (fundo escuro ao abrir no mobile) ─── */
+#sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 190;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+body.sidebar-open #sidebar-overlay { display: block; }
+
+/* ─── Sidebar close button ──────────────────────────────── */
+.sidebar-close-btn {
+  display: none;
+  background: rgba(255,255,255,.08);
+  border: none;
+  color: rgba(255,255,255,.7);
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+
+.sidebar-close-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+/* ─── Notif overlay ─────────────────────────────────────── */
+#notif-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 140;
+}
+
+#notif-overlay.open { display: block; }
+
+/* ─── Notif drawer header ───────────────────────────────── */
+.notif-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Bottom Nav (mobile only) ──────────────────────────── */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(4,12,6,.96);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,.08);
+  z-index: 180;
+  padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+  justify-content: space-around;
+  align-items: center;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  color: rgba(255,255,255,.45);
+  text-decoration: none;
+  font-size: .62rem;
+  font-weight: 600;
+  font-family: var(--font-d);
+  transition: color .2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  min-width: 56px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.bottom-nav-item i { font-size: 1.35rem; line-height: 1; }
+
+.bottom-nav-item.active { color: var(--primary-l); }
+.bottom-nav-item:hover  { color: rgba(255,255,255,.80); }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 1024px) {
@@ -1590,36 +1706,81 @@ body.offline .offline-banner { display: flex; }
 @media (max-width: 768px) {
   :root { --sidebar: 0px; }
 
+  /* Sidebar desliza da esquerda */
   .sidebar {
-    width: 260px;
+    width: 280px;
     transform: translateX(-100%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    z-index: 200;
   }
 
-  .sidebar.open { transform: translateX(0); }
+  body.sidebar-open .sidebar { transform: translateX(0); }
 
-  .app-header { left: 0; padding: 0 16px; }
-  .main-content { margin-left: 0; padding: 16px; }
-  .footer-bar   { left: 0; padding: 10px 16px; }
+  /* Mostrar botão menu e fechar */
+  #menu-btn         { display: flex; }
+  .sidebar-close-btn { display: flex; }
 
+  /* Layout */
+  .app-header { left: 0; padding: 0 14px; }
+  .main-content {
+    margin-left: 0;
+    padding: 14px 14px 80px; /* espaço para bottom nav */
+  }
+  .footer-bar { display: none; } /* bottom nav substitui */
+  .bottom-nav { display: flex; }
+
+  /* Grids */
   .grid-3, .grid-4 { grid-template-columns: repeat(2,1fr); }
   .col-2, .col-3, .col-4 { grid-column: span 2; }
-  .sigs-wrap { grid-template-columns: 1fr; }
-  .notif-drawer { width: 100%; }
-  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .stats-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
+  .sigs-wrap  { grid-template-columns: 1fr; }
 
-  .modal { border-radius: 16px; }
+  /* Notif drawer full width */
+  .notif-drawer { width: 100%; top: 0; height: 100vh; }
+
+  /* Modal mobile */
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    max-width: 100%;
+  }
+
+  /* Tabela scroll */
+  .table-wrap { -webkit-overflow-scrolling: touch; }
+
+  /* Filter bar empilha */
+  .filter-bar { gap: 8px; }
+  .filter-bar .form-control { max-width: 100%; }
+  .search-wrap { width: 100%; }
+
+  /* Cards em coluna */
+  .user-card { flex-wrap: wrap; }
+  .user-card-actions { width: 100%; justify-content: flex-end; }
 }
 
 @media (max-width: 480px) {
   html { font-size: 14px; }
-  .main-content { padding: 12px; }
+
+  .main-content { padding: 10px 10px 80px; }
+  .page-header  { flex-direction: column; align-items: stretch; }
+  .page-header .btn { width: 100%; justify-content: center; }
+
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .col-2, .col-3, .col-4 { grid-column: span 1; }
+  .col-2, .col-3, .col-4    { grid-column: span 1; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+
   .priority-wrap { flex-direction: column; }
   .status-wrap   { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .check-item    { grid-template-columns: 28px 1fr; }
   .check-data, .check-tecnico { grid-column: 2; width: 100%; }
-  .stats-grid { grid-template-columns: 1fr; }
-  .login-box  { padding: 32px 24px; }
-  .sigs-wrap  { grid-template-columns: 1fr; }
+
+  /* Quick buttons 2 por linha */
+  .quick-btn { padding: 16px 8px; font-size: .75rem; }
+  .quick-btn i { font-size: 1.35rem; }
+
+  .btn-lg { height: 48px; font-size: .92rem; }
+  .sigs-wrap { grid-template-columns: 1fr; }
+
+  .modal { border-radius: 16px 16px 0 0; }
 }
