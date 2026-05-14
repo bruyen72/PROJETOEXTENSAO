@@ -11,6 +11,9 @@
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 </head>
 <body>
+<!-- Animated background -->
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+
 <div id="toast-container"></div>
 
 <div class="login-page">
@@ -80,6 +83,7 @@
   </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/bg-animation.js') }}" defer></script>
 <script>
   function toggleSenha() {
     const inp = document.getElementById('senha-input');
