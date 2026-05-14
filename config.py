@@ -27,11 +27,11 @@ class SupabaseConfig(Config):
         host       = 'aws-1-sa-east-1.pooler.supabase.com',
         port       = 6543,
         database   = 'postgres',
+        query      = {'sslmode': 'require'},
     )
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle':  300,
-        'connect_args':  {'sslmode': 'require'},
     }
     DEBUG = False
 
