@@ -24,7 +24,7 @@ class SupabaseConfig(Config):
         drivername = 'postgresql+psycopg2',
         username   = 'postgres.aiugalructdnxrcrqnhj',
         password   = os.environ.get('DB_PASS', ''),
-        host       = 'aws-0-sa-east-1.pooler.supabase.com',
+        host       = 'aws-1-sa-east-1.pooler.supabase.com',
         port       = 6543,
         database   = 'postgres',
     )
