@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gerenciador-os
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false   # defina manualmente no dashboard do Render
+    autoDeploy: true
