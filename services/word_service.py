@@ -7,8 +7,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-INDIGO = RGBColor(0x63, 0x66, 0xf1)
-VIOLET = RGBColor(0x8b, 0x5c, 0xf6)
+GREEN  = RGBColor(0x16, 0xa3, 0x4a)
+GREEN_D= RGBColor(0x15, 0x80, 0x3d)
 DARK   = RGBColor(0x0f, 0x17, 0x2a)
 MUTED  = RGBColor(0x64, 0x74, 0x8b)
 WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
@@ -54,8 +54,8 @@ def gerar_word_os(os_obj, upload_folder):
     table = doc.add_table(rows=1, cols=2)
     table.style = 'Table Grid'
     c0, c1 = table.rows[0].cells
-    _set_cell_bg(c0, '0f172a')
-    _set_cell_bg(c1, '6366f1')
+    _set_cell_bg(c0, '15803d')
+    _set_cell_bg(c1, '166534')
 
     r0 = c0.paragraphs[0].add_run('GERENCIADOR DE OS PARA CAMPO')
     r0.bold = True; r0.font.size = Pt(13); r0.font.color.rgb = WHITE
@@ -70,7 +70,7 @@ def gerar_word_os(os_obj, upload_folder):
         t = doc.add_table(rows=1, cols=1)
         t.style = 'Table Grid'
         cell = t.rows[0].cells[0]
-        _set_cell_bg(cell, '6366f1')
+        _set_cell_bg(cell, '16a34a')
         run = cell.paragraphs[0].add_run(titulo)
         run.bold = True; run.font.size = Pt(10); run.font.color.rgb = WHITE
         doc.add_paragraph()
@@ -85,13 +85,16 @@ def gerar_word_os(os_obj, upload_folder):
 
     # ── Identificação ────────────────────────────────────
     secao('1. IDENTIFICAÇÃO DA OS')
-    campo_valor('Número OS',   os_obj.numero_os)
-    campo_valor('Status',      os_obj.status)
-    campo_valor('Prioridade',  os_obj.prioridade)
-    campo_valor('Tipo',        os_obj.tipo_ocorrencia)
-    campo_valor('Data Entrada',os_obj.data_entrada)
-    campo_valor('Data Saída',  os_obj.data_saida)
-    campo_valor('Cliente',     os_obj.cliente.nome if os_obj.cliente else '—')
+    campo_valor('Número OS',            os_obj.numero_os)
+    campo_valor('Status',               os_obj.status)
+    campo_valor('Prioridade',           os_obj.prioridade)
+    campo_valor('Tipo de Ocorrência',   os_obj.tipo_ocorrencia)
+    campo_valor('Data Entrada',         os_obj.data_entrada)
+    campo_valor('Data Saída',           os_obj.data_saida)
+    campo_valor('Cliente',              os_obj.cliente.nome if os_obj.cliente else '—')
+    campo_valor('Acompanhou a Execução', os_obj.acompanhante)  # RF12
+    campo_valor('Local / Endereço',     os_obj.geo_endereco)
+    campo_valor('Técnico Responsável',  os_obj.tecnico.usuario.nome if os_obj.tecnico else '—')
     doc.add_paragraph()
 
     # ── Laudo ────────────────────────────────────────────
@@ -112,7 +115,7 @@ def gerar_word_os(os_obj, upload_folder):
         headers = ['#', 'Teste', 'Feito', 'Técnico']
         for i, h in enumerate(headers):
             cell = t.rows[0].cells[i]
-            _set_cell_bg(cell, '8b5cf6')
+            _set_cell_bg(cell, '15803d')
             r = cell.paragraphs[0].add_run(h)
             r.bold = True; r.font.color.rgb = WHITE; r.font.size = Pt(9)
 
