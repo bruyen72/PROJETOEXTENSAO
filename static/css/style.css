@@ -50,36 +50,20 @@
   --header:    62px;
 }
 
-/* ─── Canvas Background ───────────────────────────────────── */
-#bg-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #bg-canvas { display: none; }
-}
-
 /* ─── Reset ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; font-size: 15px; }
 body {
   font-family: var(--font);
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 80% 60% at 90% 10%, rgba(22,163,74,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 10% 90%, rgba(16,185,129,.04) 0%, transparent 55%),
+    linear-gradient(160deg, #040c06 0%, #060f08 50%, #050d07 100%);
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
-  position: relative;
 }
-
-/* Tudo acima do canvas */
-.sidebar, .app-header, .main-content, .footer-bar,
-.notif-drawer, #toast-container, .offline-banner,
-.login-page { position: relative; z-index: 1; }
 
 a { color: var(--primary); text-decoration: none; transition: color .2s; }
 a:hover { color: var(--primary-l); }
@@ -1370,6 +1354,43 @@ body.offline .offline-banner { display: flex; }
 .empty-state .empty-icon i { font-size: 4rem; }
 .empty-state h3 { font-family: var(--font-d); margin-bottom: 8px; color: var(--text); }
 .empty-state p  { font-size: .88rem; }
+
+/* ─── Quick Action Button ─────────────────────────────────── */
+.quick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 12px;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: var(--radius);
+  color: rgba(255,255,255,.80);
+  text-decoration: none;
+  font-size: .82rem;
+  font-weight: 600;
+  font-family: var(--font-d);
+  transition: all .2s;
+  cursor: pointer;
+  text-align: center;
+}
+
+.quick-btn i {
+  font-size: 1.6rem;
+  color: var(--primary-l);
+  line-height: 1;
+}
+
+.quick-btn:hover {
+  background: rgba(22,163,74,.14);
+  border-color: rgba(22,163,74,.35);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+}
+
+.quick-btn:hover i { color: #fff; }
 
 /* ─── Animated gradient text ──────────────────────────────── */
 .grad-text {

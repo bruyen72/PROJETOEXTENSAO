@@ -17,9 +17,6 @@
 </head>
 <body class="has-footer">
 
-<!-- ANIMATED BACKGROUND CANVAS -->
-<canvas id="bg-canvas" aria-hidden="true"></canvas>
-
 <!-- TOAST -->
 <div id="toast-container"></div>
 
@@ -259,9 +256,6 @@
     navigator.serviceWorker.register('/static/js/sw.js').catch(()=>{});
   }
 </script>
-
-<!-- Background animation (runs after DOM ready) -->
-<script src="{{ url_for('static', filename='js/bg-animation.js') }}" defer></script>
 
 {% block extra_js %}{% endblock %}
 </body>

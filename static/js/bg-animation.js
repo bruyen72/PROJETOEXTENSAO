@@ -1,6 +1,6 @@
 /* ============================================================
-   GERENCIADOR OS — Background "Radio Frequency Professional"
-   Grid técnico · Anéis de broadcast · Espectro de frequência
+   LOGIN — Animação "Radio Communication"
+   Ondas curvas de frequência · Pacotes de sinal · Broadcast
    ============================================================ */
 
 (function () {
@@ -13,188 +13,177 @@
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
+    initAll();
   }
 
-  /* ── Anéis de broadcast (canto superior direito) ──────── */
-  const rings = [];
-  let lastRing = 0;
-
-  const SRC_X = () => W * 0.88;
-  const SRC_Y = () => H * 0.12;
-
-  /* ── Linhas de frequência horizontal ─────────────────── */
-  const freqLines = [
-    { yFrac:.28, segs:[], speed:.012, alpha:.13, height:18 },
-    { yFrac:.55, segs:[], speed:.009, alpha:.10, height:14 },
-    { yFrac:.78, segs:[], speed:.014, alpha:.11, height:16 },
+  /* ── Ondas de frequência ─────────────────────────────── */
+  const WAVE_DEFS = [
+    { yFrac:.12, amp:28, freq:.0055, speed:.016, green:220, alpha:.55, thick:1.5 },
+    { yFrac:.26, amp:42, freq:.0042, speed:.011, green:163, alpha:.40, thick:1.2 },
+    { yFrac:.40, amp:18, freq:.0070, speed:.020, green:197, alpha:.48, thick:1.0 },
+    { yFrac:.55, amp:50, freq:.0035, speed:.009, green:163, alpha:.35, thick:1.3 },
+    { yFrac:.68, amp:32, freq:.0058, speed:.014, green:220, alpha:.42, thick:1.1 },
+    { yFrac:.82, amp:22, freq:.0065, speed:.018, green:185, alpha:.38, thick:1.0 },
+    { yFrac:.92, amp:38, freq:.0048, speed:.013, green:163, alpha:.30, thick:1.2 },
   ];
 
-  function initFreqSegs(line) {
-    line.segs = Array.from({ length: Math.ceil(W / 6) + 2 }, (_, i) => ({
-      x:  i * 6,
-      h:  Math.random() * line.height + 2,
+  let waves = [];
+
+  function initAll() {
+    waves = WAVE_DEFS.map(d => ({
+      ...d,
       phase: Math.random() * Math.PI * 2,
-      speed: line.speed * (0.8 + Math.random() * 0.4),
+      packets: Array.from({ length: Math.floor(2 + Math.random() * 3) }, () => ({
+        t:      Math.random(),       /* posição 0→1 na onda */
+        speed:  .0015 + Math.random() * .002,
+        size:   2.5 + Math.random() * 2.5,
+        bright: Math.random() < .35, /* branco brilhante ou verde */
+        trail:  [],
+      })),
     }));
   }
 
-  /* ── Partículas ───────────────────────────────────────── */
-  let pts = [];
+  /* ── Nós de broadcast (pontos que pulsam) ────────────── */
+  const NODE_COUNT = 6;
+  let nodes = [];
 
-  function spawnPts() {
-    const n = window.innerWidth < 768 ? 30 : 55;
-    pts = Array.from({ length: n }, () => ({
+  function initNodes() {
+    nodes = Array.from({ length: NODE_COUNT }, () => ({
       x:     Math.random() * W,
       y:     Math.random() * H,
-      r:     Math.random() * 1.5 + 0.3,
-      vx:    (Math.random() - 0.5) * 0.15,
-      vy:    -(Math.random() * 0.25 + 0.04),
-      alpha: Math.random() * 0.40 + 0.08,
       phase: Math.random() * Math.PI * 2,
-      white: Math.random() < 0.22,
+      r:     60 + Math.random() * 80,
+      rings: [{ rr: 0, alpha: .6 }],
+      timer: Math.random() * 180,
     }));
+  }
+
+  /* ── Utilitário: ponto na onda ───────────────────────── */
+  function waveY(wave, x) {
+    return H * wave.yFrac + Math.sin(x * wave.freq + wave.phase) * wave.amp;
   }
 
   /* ── Draw ─────────────────────────────────────────────── */
   function draw(ts) {
     ctx.clearRect(0, 0, W, H);
 
-    /* 1. Grid técnico de pontos */
-    const gs = 52;
-    for (let x = 0; x <= W + gs; x += gs) {
-      for (let y = 0; y <= H + gs; y += gs) {
-        const dx = x - SRC_X();
-        const dy = y - SRC_Y();
-        const d  = Math.sqrt(dx * dx + dy * dy);
-        const a  = Math.max(0, 0.07 - d / (Math.max(W, H) * 3));
+    /* 1. Fundo gradiente */
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0,   '#060f09');
+    bg.addColorStop(.5,  '#081608');
+    bg.addColorStop(1,   '#050c07');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    /* 2. Nós de broadcast */
+    nodes.forEach(nd => {
+      nd.timer--;
+      if (nd.timer <= 0) {
+        nd.rings.push({ rr: 0, alpha: .55 });
+        nd.timer = 120 + Math.random() * 160;
+      }
+
+      nd.rings = nd.rings.filter(r => r.alpha > .01);
+      nd.rings.forEach(r => {
+        r.rr    += 1.2;
+        r.alpha -= .004;
         ctx.beginPath();
-        ctx.arc(x, y, 1, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(22,163,74,${a + 0.02})`;
+        ctx.arc(nd.x, nd.y, r.rr, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(34,197,94,${r.alpha})`;
+        ctx.lineWidth   = .9;
+        ctx.stroke();
+      });
+
+      /* Ponto central pulsante */
+      nd.phase += .025;
+      const p = .5 + .5 * Math.sin(nd.phase);
+      ctx.beginPath();
+      ctx.arc(nd.x, nd.y, 2.5 + p, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(74,222,128,${.5 + p * .4})`;
+      ctx.fill();
+    });
+
+    /* 3. Ondas curvas */
+    waves.forEach(wave => {
+      wave.phase += wave.speed * .016 * 60;
+
+      /* Linha da onda */
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 3) {
+        const y = waveY(wave, x);
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(34,${wave.green},74,${wave.alpha})`;
+      ctx.lineWidth   = wave.thick;
+      ctx.stroke();
+
+      /* 4. Pacotes de sinal na onda */
+      wave.packets.forEach(pk => {
+        pk.t += pk.speed;
+        if (pk.t > 1) pk.t = 0;
+
+        const x  = pk.t * W;
+        const y  = waveY(wave, x);
+
+        /* Trail */
+        pk.trail.push({ x, y });
+        if (pk.trail.length > 12) pk.trail.shift();
+
+        pk.trail.forEach((pt, i) => {
+          const a = (i / pk.trail.length) * (pk.bright ? .7 : .5) * wave.alpha * 2;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, pk.size * (i / pk.trail.length) * .7, 0, Math.PI * 2);
+          ctx.fillStyle = pk.bright
+            ? `rgba(255,255,255,${a})`
+            : `rgba(74,222,128,${a})`;
+          ctx.fill();
+        });
+
+        /* Ponto principal */
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, pk.size * 2.5);
+        glow.addColorStop(0, pk.bright ? `rgba(255,255,255,.9)` : `rgba(74,222,128,.85)`);
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, pk.size * 2.5, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x, y, pk.size * .6, 0, Math.PI * 2);
+        ctx.fillStyle = pk.bright ? '#fff' : '#4ade80';
+        ctx.fill();
+      });
+    });
+
+    /* 5. Conexões entre nós próximos */
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < 240) {
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `rgba(34,197,94,${.12 * (1 - d / 240)})`;
+          ctx.lineWidth   = .7;
+          ctx.stroke();
+        }
       }
     }
 
-    /* 2. Linhas de grade horizontal (sutis) */
-    for (let y = gs; y < H; y += gs) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(W, y);
-      ctx.strokeStyle = 'rgba(22,163,74,.03)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-    for (let x = gs; x < W; x += gs) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, H);
-      ctx.strokeStyle = 'rgba(22,163,74,.025)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    /* 3. Anéis de broadcast */
-    if (ts - lastRing > 2200) {
-      rings.push({ r: 0 });
-      lastRing = ts;
-    }
-
-    const maxR = Math.max(W, H) * 1.1;
-    const sx = SRC_X(), sy = SRC_Y();
-
-    for (let i = rings.length - 1; i >= 0; i--) {
-      const rg  = rings[i];
-      rg.r += 1.4;
-      const a = 0.45 * Math.max(0, 1 - rg.r / maxR);
-      if (a <= 0.005) { rings.splice(i, 1); continue; }
-
-      ctx.beginPath();
-      ctx.arc(sx, sy, rg.r, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(22,163,74,${a})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    /* Ponto central do broadcast */
-    const pulse = 0.5 + 0.5 * Math.sin(ts * 0.003);
-    const pg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 24 + pulse * 8);
-    pg.addColorStop(0,   `rgba(34,197,94,${0.5 + pulse * 0.3})`);
-    pg.addColorStop(0.4, `rgba(22,163,74,${0.2 + pulse * 0.1})`);
-    pg.addColorStop(1,   'rgba(0,0,0,0)');
-    ctx.fillStyle = pg;
-    ctx.fillRect(sx - 32, sy - 32, 64, 64);
-
-    ctx.beginPath();
-    ctx.arc(sx, sy, 3, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(74,222,128,${0.8 + pulse * 0.2})`;
-    ctx.fill();
-
-    /* 4. Espectro de frequência */
-    freqLines.forEach(line => {
-      const baseY = H * line.yFrac;
-      ctx.beginPath();
-      line.segs.forEach(seg => {
-        seg.phase += seg.speed;
-        const h = seg.h * (0.4 + 0.6 * Math.abs(Math.sin(seg.phase)));
-        const y = baseY - h / 2;
-        if (seg === line.segs[0]) ctx.moveTo(seg.x, baseY);
-        ctx.lineTo(seg.x, baseY - h);
-        ctx.lineTo(seg.x + 3, baseY - h);
-        ctx.lineTo(seg.x + 3, baseY);
-      });
-      ctx.closePath();
-      const grad = ctx.createLinearGradient(0, baseY - line.height, 0, baseY);
-      grad.addColorStop(0, `rgba(34,197,94,${line.alpha * 1.4})`);
-      grad.addColorStop(1, `rgba(22,163,74,${line.alpha * 0.4})`);
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      /* Linha de base */
-      ctx.beginPath();
-      ctx.moveTo(0, baseY);
-      ctx.lineTo(W, baseY);
-      ctx.strokeStyle = `rgba(22,163,74,${line.alpha * 0.8})`;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    });
-
-    /* 5. Partículas */
-    pts.forEach(p => {
-      p.phase += 0.02;
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.y < -6) { p.y = H + 6; p.x = Math.random() * W; }
-      if (p.x < -6) p.x = W + 6;
-      if (p.x > W + 6) p.x = -6;
-
-      const a = p.alpha * (0.65 + 0.35 * Math.sin(p.phase));
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.white
-        ? `rgba(255,255,255,${a * 0.8})`
-        : `rgba(34,197,94,${a})`;
-      ctx.fill();
-    });
-
-    /* 6. Vinheta */
-    const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*.28, W/2, H/2, Math.max(W,H)*.9);
+    /* 6. Vinheta suave */
+    const vg = ctx.createRadialGradient(W/2, H/2, H*.2, W/2, H/2, Math.max(W,H)*.75);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,.50)');
+    vg.addColorStop(1, 'rgba(0,0,0,.45)');
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
 
     requestAnimationFrame(draw);
   }
 
-  window.addEventListener('resize', () => {
-    resize();
-    spawnPts();
-    freqLines.forEach(l => initFreqSegs(l));
-  });
-
+  window.addEventListener('resize', resize);
   resize();
-  spawnPts();
-  freqLines.forEach(l => initFreqSegs(l));
-  rings.push({ r: 0 });
-  lastRing = 0;
+  initNodes();
   requestAnimationFrame(draw);
 })();

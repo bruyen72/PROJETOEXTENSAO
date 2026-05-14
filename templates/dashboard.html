@@ -1,25 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block page_title %}
-  <i class="ph ph-chart-bar" style="color:var(--primary)"></i>
-  <span class="grad-text">Dashboard</span>
+  <i class="ph ph-squares-four" style="color:var(--primary)"></i>
+  Dashboard
 {% endblock %}
 
 {% block content %}
+
+<!-- Saudação -->
 <div class="page-header">
   <div>
-    <h1>Visão Geral <i class="ph ph-lightning" style="color:var(--primary-l);font-size:1.4rem"></i></h1>
-    <p>Bem-vindo, <strong>{{ current_user.nome }}</strong>! Resumo das ordens de serviço.</p>
+    <h1 style="font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:4px">
+      Olá, <span style="color:var(--primary-l)">{{ current_user.nome.split()[0] }}</span> 👋
+    </h1>
+    <p style="color:rgba(255,255,255,.50);font-size:.85rem">
+      Resumo das Ordens de Serviço — atualizado agora
+    </p>
   </div>
   <a href="{{ url_for('os.nova') }}" class="btn btn-primary">
     <i class="ph ph-plus-circle"></i> Nova OS
   </a>
 </div>
 
-<!-- Stats -->
-<div class="stats-grid">
+<!-- ── Cards de estatística ──────────────────────────────── -->
+<div class="stats-grid" style="margin-bottom:28px">
+
   <div class="stat-card">
-    <div class="stat-icon green">
+    <div class="stat-icon" style="background:rgba(22,163,74,.18);color:#4ade80">
       <i class="ph-bold ph-clipboard-text"></i>
     </div>
     <div class="stat-info">
@@ -27,8 +34,9 @@
       <div class="stat-label">Total de OS</div>
     </div>
   </div>
+
   <div class="stat-card">
-    <div class="stat-icon info">
+    <div class="stat-icon" style="background:rgba(2,132,199,.18);color:#38bdf8">
       <i class="ph-bold ph-folder-open"></i>
     </div>
     <div class="stat-info">
@@ -36,17 +44,19 @@
       <div class="stat-label">Em Aberto</div>
     </div>
   </div>
+
   <div class="stat-card">
-    <div class="stat-icon warning">
-      <i class="ph-bold ph-gear"></i>
+    <div class="stat-icon" style="background:rgba(217,119,6,.18);color:#fbbf24">
+      <i class="ph-bold ph-gear-six"></i>
     </div>
     <div class="stat-info">
       <div class="stat-value">{{ andamento }}</div>
       <div class="stat-label">Em Andamento</div>
     </div>
   </div>
+
   <div class="stat-card">
-    <div class="stat-icon light">
+    <div class="stat-icon" style="background:rgba(22,163,74,.18);color:#86efac">
       <i class="ph-bold ph-check-circle"></i>
     </div>
     <div class="stat-info">
@@ -54,8 +64,9 @@
       <div class="stat-label">Concluídas</div>
     </div>
   </div>
+
   <div class="stat-card">
-    <div class="stat-icon danger">
+    <div class="stat-icon" style="background:rgba(220,38,38,.18);color:#fca5a5">
       <i class="ph-bold ph-fire"></i>
     </div>
     <div class="stat-info">
@@ -63,54 +74,61 @@
       <div class="stat-label">Urgentes</div>
     </div>
   </div>
+
 </div>
 
-<!-- Acesso Rápido -->
-<div class="grid-3" style="margin-bottom:28px">
-  <a href="{{ url_for('os.nova') }}" class="card" style="padding:18px;display:flex;align-items:center;gap:14px;text-decoration:none;cursor:pointer">
-    <div class="stat-icon green" style="flex-shrink:0"><i class="ph-bold ph-plus-circle"></i></div>
-    <div>
-      <div style="font-weight:600;font-size:.92rem">Nova OS</div>
-      <div style="font-size:.78rem;color:var(--text-2)">Criar ordem de serviço</div>
-    </div>
+<!-- ── Acesso rápido ─────────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px">
+
+  <a href="{{ url_for('os.nova') }}" class="quick-btn">
+    <i class="ph-bold ph-plus-circle"></i>
+    <span>Nova OS</span>
   </a>
-  <a href="{{ url_for('clientes_page.lista') }}" class="card" style="padding:18px;display:flex;align-items:center;gap:14px;text-decoration:none;cursor:pointer">
-    <div class="stat-icon forest" style="flex-shrink:0"><i class="ph-bold ph-users-three"></i></div>
-    <div>
-      <div style="font-weight:600;font-size:.92rem">Clientes</div>
-      <div style="font-size:.78rem;color:var(--text-2)">Gerenciar clientes</div>
-    </div>
+  <a href="{{ url_for('os.lista') }}" class="quick-btn">
+    <i class="ph-bold ph-list-bullets"></i>
+    <span>Ver Todas OS</span>
   </a>
-  <a href="{{ url_for('os.lista') }}" class="card" style="padding:18px;display:flex;align-items:center;gap:14px;text-decoration:none;cursor:pointer">
-    <div class="stat-icon light" style="flex-shrink:0"><i class="ph-bold ph-list-magnifying-glass"></i></div>
-    <div>
-      <div style="font-weight:600;font-size:.92rem">Todas as OS</div>
-      <div style="font-size:.78rem;color:var(--text-2)">Ver e filtrar ordens</div>
-    </div>
+  <a href="{{ url_for('clientes_page.lista') }}" class="quick-btn">
+    <i class="ph-bold ph-users-three"></i>
+    <span>Clientes</span>
   </a>
+  <a href="{{ url_for('notif_page.lista') }}" class="quick-btn">
+    <i class="ph-bold ph-bell"></i>
+    <span>Notificações</span>
+  </a>
+  {% if current_user.perfil == 'admin' %}
+  <a href="{{ url_for('usuarios.lista') }}" class="quick-btn">
+    <i class="ph-bold ph-gear-six"></i>
+    <span>Usuários</span>
+  </a>
+  {% endif %}
+
 </div>
 
-<!-- Recentes -->
+<!-- ── Ordens Recentes ───────────────────────────────────── -->
 <div class="card">
-  <div class="card-header">
-    <div class="card-icon" style="background:rgba(34,197,94,.14)">
-      <i class="ph ph-clipboard-text"></i>
+  <div class="card-header" style="padding:16px 20px">
+    <div style="width:34px;height:34px;background:rgba(22,163,74,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--primary-l);font-size:1.1rem">
+      <i class="ph ph-clock-countdown"></i>
     </div>
-    <h2>Ordens Recentes</h2>
+    <h2 style="font-family:var(--font-d);font-weight:600;font-size:.95rem;color:#fff">
+      Ordens Recentes
+    </h2>
     <a href="{{ url_for('os.lista') }}" class="btn btn-ghost btn-sm" style="margin-left:auto">
       Ver todas <i class="ph ph-arrow-right"></i>
     </a>
   </div>
+
+  {% if recentes %}
   <div style="overflow-x:auto">
-    {% if recentes %}
     <table class="data-table">
       <thead>
         <tr>
-          <th>Nº OS</th>
-          <th>Cliente</th>
+          <th><i class="ph ph-hash" style="margin-right:4px"></i>Nº OS</th>
+          <th><i class="ph ph-user" style="margin-right:4px"></i>Cliente</th>
           <th>Status</th>
           <th>Prioridade</th>
-          <th>Data Entrada</th>
+          <th><i class="ph ph-calendar" style="margin-right:4px"></i>Data</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -118,33 +136,29 @@
         {% for os in recentes %}
         <tr>
           <td>
-            <strong style="color:var(--primary);font-family:var(--font-d)">{{ os.numero_os }}</strong>
-          </td>
-          <td>
-            <span style="display:flex;align-items:center;gap:6px">
-              <i class="ph ph-user-circle" style="color:var(--primary);font-size:1rem"></i>
-              {{ os.cliente.nome if os.cliente else '—' }}
+            <span style="font-family:var(--font-d);font-weight:700;color:var(--primary-l);font-size:.88rem">
+              {{ os.numero_os }}
             </span>
           </td>
+          <td style="font-weight:500;color:#fff">
+            {{ os.cliente.nome if os.cliente else '—' }}
+          </td>
           <td>
-            {% set s = os.status.lower().replace(' ', '') %}
+            {% set s = os.status.lower().replace(' ','') %}
             <span class="badge badge-{{ s }}">{{ os.status }}</span>
           </td>
           <td>
             <span class="badge badge-{{ os.prioridade.lower() }}">{{ os.prioridade }}</span>
           </td>
-          <td>
-            <span style="display:flex;align-items:center;gap:5px;color:var(--text-2);font-size:.85rem">
-              <i class="ph ph-calendar" style="color:var(--primary)"></i>
-              {{ os.data_entrada.strftime('%d/%m/%Y') if os.data_entrada else '—' }}
-            </span>
+          <td style="color:rgba(255,255,255,.60);font-size:.83rem">
+            {{ os.data_entrada.strftime('%d/%m/%Y') if os.data_entrada else '—' }}
           </td>
           <td>
             <div style="display:flex;gap:6px">
-              <button class="btn btn-ghost btn-sm" onclick="verOS({{ os.id }})" title="Ver OS">
+              <button class="btn btn-ghost btn-sm btn-icon" onclick="verOS({{ os.id }})" title="Ver">
                 <i class="ph ph-eye"></i>
               </button>
-              <button class="btn btn-danger btn-sm" onclick="desativarOS({{ os.id }})" title="Desativar">
+              <button class="btn btn-danger btn-sm btn-icon" onclick="desativarOS({{ os.id }})" title="Desativar">
                 <i class="ph ph-trash"></i>
               </button>
             </div>
@@ -153,15 +167,16 @@
         {% endfor %}
       </tbody>
     </table>
-    {% else %}
-    <div class="empty-state">
-      <div class="empty-icon"><i class="ph ph-clipboard"></i></div>
-      <h3>Nenhuma OS cadastrada</h3>
-      <p>Clique em "Nova OS" para começar.</p>
-    </div>
-    {% endif %}
   </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon"><i class="ph ph-clipboard"></i></div>
+    <h3>Nenhuma OS cadastrada</h3>
+    <p>Clique em "Nova OS" para começar.</p>
+  </div>
+  {% endif %}
 </div>
+
 {% endblock %}
 
 {% block footer %}
@@ -175,16 +190,11 @@
   function verOS(id) {
     window.location.href = '{{ url_for("os.lista") }}?id=' + id;
   }
-
   async function desativarOS(id) {
-    if (!confirm('Desativar esta OS? (soft delete — dados mantidos)')) return;
+    if (!confirm('Desativar esta OS?')) return;
     const r = await fetch(`/api/os/${id}`, { method: 'DELETE' });
-    if (r.ok) {
-      showToast('OS desativada.', 'aviso');
-      setTimeout(() => location.reload(), 1200);
-    } else {
-      showToast('Erro ao desativar.', 'erro');
-    }
+    if (r.ok) { showToast('OS desativada.', 'aviso'); setTimeout(() => location.reload(), 1000); }
+    else showToast('Erro ao desativar.', 'erro');
   }
 </script>
 {% endblock %}
