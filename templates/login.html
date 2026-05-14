@@ -157,6 +157,8 @@
         0 0 0 8px rgba(255,255,255,.05),
         0 0 30px rgba(34,197,94,.20);
       filter: brightness(1.1) saturate(1.2);
+      pointer-events: none;
+      user-select: none;
     }
 
     /* ── Painel direito (branco) ──────────────────────── */
@@ -345,7 +347,10 @@
 
       <!-- Vídeo pequeno decorativo -->
       <div class="radio-video-wrap">
-        <video autoplay muted loop playsinline>
+        <video autoplay muted loop playsinline
+               disablepictureinpicture
+               controlslist="nodownload nofullscreen noremoteplayback"
+               oncontextmenu="return false">
           <source src="/static/videos/radiosemfundo.mp4" type="video/mp4">
         </video>
       </div>
