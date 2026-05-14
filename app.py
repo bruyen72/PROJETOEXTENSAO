@@ -1,6 +1,6 @@
 import os
-from flask import Flask, render_template, jsonify
-from flask_login import LoginManager
+from flask import Flask, render_template, jsonify, redirect, url_for
+from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from config import ActiveConfig
 from models import db, Usuario
@@ -24,24 +24,30 @@ def create_app(config=None):
     login_manager.login_message_category = 'warning'
 
     # ── Blueprints ────────────────────────────────────────
-    from blueprints.auth           import auth_bp
-    from blueprints.os_routes      import os_bp
-    from blueprints.cliente_routes import cliente_bp
+    from blueprints.auth              import auth_bp
+    from blueprints.os_routes         import os_bp
+    from blueprints.cliente_routes    import cliente_bp
+    from blueprints.cliente_views     import cliente_views_bp
     from blueprints.notificacao_routes import notificacao_bp
-    from blueprints.relatorio_routes   import relatorio_bp
-    from blueprints.sync_routes        import sync_bp
+    from blueprints.notif_views       import notif_views_bp
+    from blueprints.usuario_routes    import usuario_bp
+    from blueprints.relatorio_routes  import relatorio_bp
+    from blueprints.sync_routes       import sync_bp
 
+    # Páginas HTML
     app.register_blueprint(auth_bp)
-    app.register_blueprint(os_bp,          url_prefix='/api/os')
-    app.register_blueprint(cliente_bp,     url_prefix='/api/clientes')
-    app.register_blueprint(notificacao_bp, url_prefix='/api/notificacoes')
-    app.register_blueprint(relatorio_bp,   url_prefix='/api/relatorios')
-    app.register_blueprint(sync_bp,        url_prefix='/api/sync')
+    app.register_blueprint(os_bp,            url_prefix='/api/os')
+    app.register_blueprint(cliente_views_bp,  url_prefix='/clientes')
+    app.register_blueprint(notif_views_bp,    url_prefix='/notificacoes')
+    app.register_blueprint(usuario_bp,        url_prefix='/usuarios')
 
-    # ── Página raiz → redireciona para dashboard ou login ─
-    from flask import redirect, url_for
-    from flask_login import current_user
+    # APIs JSON
+    app.register_blueprint(cliente_bp,        url_prefix='/api/clientes')
+    app.register_blueprint(notificacao_bp,    url_prefix='/api/notificacoes')
+    app.register_blueprint(relatorio_bp,      url_prefix='/api/relatorios')
+    app.register_blueprint(sync_bp,           url_prefix='/api/sync')
 
+    # ── Raiz ──────────────────────────────────────────────
     @app.route('/')
     def index():
         if current_user.is_authenticated:
@@ -57,7 +63,7 @@ def create_app(config=None):
     def forbidden(e):
         return jsonify({'erro': 'Acesso negado'}), 403
 
-    # ── Criar tabelas no primeiro run ─────────────────────
+    # ── Inicialização do banco ────────────────────────────
     with app.app_context():
         db.create_all()
         _criar_admin_padrao()

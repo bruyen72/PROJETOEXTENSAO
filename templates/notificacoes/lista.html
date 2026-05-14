@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Notificações{% endblock %}
+{% block page_title %}
+  <i class="ph ph-bell" style="color:var(--primary)"></i>
+  Notificações
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Notificações <span class="grad-text" id="titulo-count"></span></h1>
+    <p>Central de alertas e mensagens do sistema.</p>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-ghost" onclick="lerTodas()">
+      <i class="ph ph-checks"></i> Marcar todas lidas
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="carregar()">
+      <i class="ph ph-arrows-clockwise"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Filtro tipo -->
+<div class="filter-bar">
+  <button class="btn btn-sm btn-ghost tipo-btn active" data-tipo="" onclick="setTipo(this,'')">
+    <i class="ph ph-list"></i> Todas
+  </button>
+  <button class="btn btn-sm btn-ghost tipo-btn" data-tipo="info" onclick="setTipo(this,'info')">
+    <i class="ph ph-info" style="color:#67e8f9"></i> Info
+  </button>
+  <button class="btn btn-sm btn-ghost tipo-btn" data-tipo="success" onclick="setTipo(this,'success')">
+    <i class="ph ph-check-circle" style="color:var(--primary)"></i> Sucesso
+  </button>
+  <button class="btn btn-sm btn-ghost tipo-btn" data-tipo="warning" onclick="setTipo(this,'warning')">
+    <i class="ph ph-warning" style="color:#fcd34d"></i> Aviso
+  </button>
+  <button class="btn btn-sm btn-ghost tipo-btn" data-tipo="danger" onclick="setTipo(this,'danger')">
+    <i class="ph ph-x-circle" style="color:#fca5a5"></i> Urgente
+  </button>
+  <div style="margin-left:auto">
+    <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-2);cursor:pointer">
+      <input type="checkbox" id="so-nao-lidas" onchange="carregar()" style="accent-color:var(--primary)">
+      Só não lidas
+    </label>
+  </div>
+</div>
+
+<!-- Stats rápidas -->
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:24px">
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="ph-bold ph-bell"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="st-total">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning"><i class="ph-bold ph-bell-ringing"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="st-nao-lidas">0</div>
+      <div class="stat-label">Não Lidas</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon light"><i class="ph-bold ph-check-circle"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="st-lidas">0</div>
+      <div class="stat-label">Lidas</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lista de notificações -->
+<div id="notif-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let todasNotifs = [];
+  let filtroTipo  = '';
+
+  const ICONS = {
+    info:    { icon: 'info',         cls: 'info' },
+    success: { icon: 'check-circle', cls: 'success' },
+    warning: { icon: 'warning',      cls: 'warning' },
+    danger:  { icon: 'x-circle',     cls: 'danger' },
+    urgente: { icon: 'fire',         cls: 'danger' },
+  };
+
+  async function carregar() {
+    try {
+      const r    = await fetch('/api/notificacoes/');
+      todasNotifs = await r.json();
+      atualizarStats();
+      renderizar();
+    } catch {
+      showToast('Erro ao carregar notificações.', 'erro');
+    }
+  }
+
+  function atualizarStats() {
+    const naoLidas = todasNotifs.filter(n => !n.lida).length;
+    document.getElementById('st-total').textContent     = todasNotifs.length;
+    document.getElementById('st-nao-lidas').textContent = naoLidas;
+    document.getElementById('st-lidas').textContent     = todasNotifs.length - naoLidas;
+    document.getElementById('titulo-count').textContent = naoLidas > 0 ? `(${naoLidas})` : '';
+  }
+
+  function renderizar() {
+    const soNaoLidas = document.getElementById('so-nao-lidas').checked;
+    let lista = todasNotifs;
+    if (filtroTipo) lista = lista.filter(n => n.tipo === filtroTipo);
+    if (soNaoLidas) lista = lista.filter(n => !n.lida);
+
+    const container = document.getElementById('notif-container');
+
+    if (!lista.length) {
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-icon"><i class="ph ph-bell-slash"></i></div>
+        <h3>Nenhuma notificação</h3>
+        <p>${filtroTipo || soNaoLidas ? 'Sem resultados para o filtro aplicado.' : 'Você está em dia!'}</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = lista.map(n => {
+      const info = ICONS[n.tipo] || ICONS.info;
+      const dt   = new Date(n.criado_em).toLocaleString('pt-BR');
+      return `<div class="notif-full-item ${n.lida ? '' : 'nao-lida'}"
+                   onclick="lerNotif(${n.id}, this)">
+        <div class="notif-full-icon ${info.cls}">
+          <i class="ph ph-${info.icon}"></i>
+        </div>
+        <div class="notif-full-content" style="flex:1">
+          <div class="notif-msg">${esc(n.mensagem)}</div>
+          <div class="notif-time">
+            <i class="ph ph-clock" style="font-size:.72rem"></i>
+            ${dt}
+            ${n.os_id ? `· <a href="/api/os/${n.os_id}" style="color:var(--primary);font-size:.74rem">Ver OS</a>` : ''}
+          </div>
+        </div>
+        ${!n.lida ? `<div class="notif-unread-dot" title="Não lida"></div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function setTipo(btn, tipo) {
+    filtroTipo = tipo;
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderizar();
+  }
+
+  async function lerNotif(id, el) {
+    const n = todasNotifs.find(x => x.id === id);
+    if (!n || n.lida) return;
+    await fetch(`/api/notificacoes/${id}/ler`, { method: 'PATCH' });
+    n.lida = true;
+    el.classList.remove('nao-lida');
+    el.querySelector('.notif-unread-dot')?.remove();
+    atualizarStats();
+    carregarNotifs(); /* badge no header */
+  }
+
+  async function lerTodas() {
+    await fetch('/api/notificacoes/ler-todas', { method: 'PATCH' });
+    showToast('Todas marcadas como lidas.', 'sucesso');
+    await carregar();
+    carregarNotifs();
+  }
+
+  document.addEventListener('DOMContentLoaded', carregar);
+</script>
+{% endblock %}

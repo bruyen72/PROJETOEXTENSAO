@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+{% block title %}Usuários{% endblock %}
+{% block page_title %}
+  <i class="ph ph-gear-six" style="color:var(--primary)"></i>
+  Usuários
+{% endblock %}
+
+{% block content %}
+{% if current_user.perfil != 'admin' %}
+<div class="card card-body" style="margin-top:40px;text-align:center;padding:60px">
+  <i class="ph ph-lock-key" style="font-size:3rem;color:var(--danger);display:block;margin-bottom:16px"></i>
+  <h2>Acesso Restrito</h2>
+  <p style="color:var(--text-2);margin-top:8px">Apenas administradores podem gerenciar usuários.</p>
+  <a href="{{ url_for('os.dashboard') }}" class="btn btn-primary" style="margin-top:24px">
+    <i class="ph ph-house-simple"></i> Voltar ao Dashboard
+  </a>
+</div>
+{% else %}
+
+<div class="page-header">
+  <div>
+    <h1>Gestão de <span class="grad-text">Usuários</span></h1>
+    <p>Cadastre e gerencie os técnicos e administradores do sistema.</p>
+  </div>
+  <button class="btn btn-primary" onclick="abrirModal('modal-usuario')">
+    <i class="ph ph-user-plus"></i> Novo Usuário
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:24px">
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="ph-bold ph-users"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="st-total">0</div>
+      <div class="stat-label">Total de Usuários</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon forest"><i class="ph-bold ph-shield-check"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="st-admins">0</div>
+      <div class="stat-label">Administradores</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon light"><i class="ph-bold ph-wrench"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="st-tecnicos">0</div>
+      <div class="stat-label">Técnicos</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning"><i class="ph-bold ph-check-circle"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="st-ativos">0</div>
+      <div class="stat-label">Ativos</div>
+    </div>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="filter-bar">
+  <div class="search-wrap" style="flex:1;min-width:200px">
+    <i class="ph ph-magnifying-glass search-icon"></i>
+    <input type="text" id="busca" class="form-control" placeholder="Buscar por nome ou e-mail…" oninput="filtrar()">
+  </div>
+  <select id="sel-perfil" class="form-control" onchange="filtrar()" style="max-width:150px;height:38px;min-height:38px">
+    <option value="">Todos perfis</option>
+    <option value="admin">Admin</option>
+    <option value="tecnico">Técnico</option>
+  </select>
+  <select id="sel-ativo" class="form-control" onchange="filtrar()" style="max-width:150px;height:38px;min-height:38px">
+    <option value="">Todos</option>
+    <option value="true">Ativos</option>
+    <option value="false">Inativos</option>
+  </select>
+</div>
+
+<!-- Lista -->
+<div id="usuarios-grid" class="grid-2" style="margin-bottom:60px"></div>
+
+<!-- ═══ MODAL — Cadastrar/Editar Usuário ══════════════════ -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="ph ph-user-plus"></i>
+        <span id="modal-usuario-titulo">Novo Usuário</span>
+      </div>
+      <button class="modal-close" onclick="fecharModal('modal-usuario')">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="usuario-id">
+      <div class="grid-1">
+        <div class="form-group">
+          <label class="form-label">Nome Completo <span class="req">*</span></label>
+          <input type="text" id="usr-nome" class="form-control" placeholder="Nome do técnico/admin">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail <span class="req">*</span></label>
+          <input type="email" id="usr-email" class="form-control" placeholder="usuario@empresa.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Perfil <span class="req">*</span></label>
+          <select id="usr-perfil" class="form-control">
+            <option value="tecnico">Técnico</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="form-group" id="grupo-senha">
+          <label class="form-label">Senha <span class="req" id="req-senha">*</span></label>
+          <div class="pass-wrap">
+            <input type="password" id="usr-senha" class="form-control"
+                   placeholder="Mínimo 6 caracteres">
+            <button type="button" class="pass-toggle" onclick="togglePass()">
+              <i class="ph ph-eye" id="pass-eye"></i>
+            </button>
+          </div>
+          <p id="senha-hint" style="font-size:.75rem;color:var(--text-dim);margin-top:4px">
+            Deixe em branco para manter a senha atual (ao editar).
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarUsuario()">
+        <i class="ph ph-floppy-disk"></i> Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL — Confirmar desativação ═════════════════════ -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="ph ph-warning" style="color:var(--danger)"></i>
+        Desativar Usuário
+      </div>
+      <button class="modal-close" onclick="fecharModal('modal-confirm')">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Tem certeza que deseja desativar o usuário <strong id="confirm-nome"></strong>?</p>
+      <p style="color:var(--text-2);font-size:.85rem;margin-top:8px">
+        O usuário perderá acesso ao sistema. Essa ação pode ser revertida.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-confirm')">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirm-desativ">
+        <i class="ph ph-trash"></i> Desativar
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block footer %}
+{% if current_user.perfil == 'admin' %}
+<button class="btn btn-primary" onclick="abrirModal('modal-usuario')">
+  <i class="ph ph-user-plus"></i> Novo Usuário
+</button>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if current_user.perfil == 'admin' %}
+<script>
+  let todosUsuarios = [];
+
+  function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+  function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  });
+
+  function togglePass() {
+    const inp = document.getElementById('usr-senha');
+    const eye = document.getElementById('pass-eye');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      eye.className = 'ph ph-eye-slash';
+    } else {
+      inp.type = 'password';
+      eye.className = 'ph ph-eye';
+    }
+  }
+
+  async function carregar() {
+    try {
+      const r = await fetch('/usuarios/api/');
+      todosUsuarios = await r.json();
+      atualizarStats();
+      filtrar();
+    } catch {
+      showToast('Erro ao carregar usuários.', 'erro');
+    }
+  }
+
+  function atualizarStats() {
+    const admins   = todosUsuarios.filter(u => u.perfil === 'admin').length;
+    const tecnicos = todosUsuarios.filter(u => u.perfil === 'tecnico').length;
+    const ativos   = todosUsuarios.filter(u => u.ativo).length;
+    document.getElementById('st-total').textContent   = todosUsuarios.length;
+    document.getElementById('st-admins').textContent  = admins;
+    document.getElementById('st-tecnicos').textContent= tecnicos;
+    document.getElementById('st-ativos').textContent  = ativos;
+  }
+
+  function filtrar() {
+    const q     = (document.getElementById('busca').value || '').toLowerCase();
+    const perf  = document.getElementById('sel-perfil').value;
+    const ativ  = document.getElementById('sel-ativo').value;
+    let lista   = todosUsuarios;
+    if (q)           lista = lista.filter(u => u.nome?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
+    if (perf)        lista = lista.filter(u => u.perfil === perf);
+    if (ativ === 'true')  lista = lista.filter(u => u.ativo !== false);
+    if (ativ === 'false') lista = lista.filter(u => u.ativo === false);
+    renderizar(lista);
+  }
+
+  function renderizar(lista) {
+    const grid = document.getElementById('usuarios-grid');
+    if (!lista.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon"><i class="ph ph-users"></i></div>
+        <h3>Nenhum usuário encontrado</h3>
+        <p>Ajuste os filtros ou cadastre um novo usuário.</p>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = lista.map(u => {
+      const isMe = u.email === '{{ current_user.email }}';
+      return `<div class="user-card">
+        <div class="avatar lg">${u.nome[0].toUpperCase()}</div>
+        <div class="user-card-info">
+          <div class="user-card-name">
+            ${esc(u.nome)}
+            ${isMe ? '<span class="tag" style="margin-left:6px">Você</span>' : ''}
+          </div>
+          <div class="user-card-email">
+            <i class="ph ph-envelope" style="color:var(--primary);font-size:.9rem"></i>
+            ${esc(u.email)}
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <span class="badge badge-${u.perfil}">${u.perfil === 'admin' ? 'Admin' : 'Técnico'}</span>
+            <span class="badge ${u.ativo !== false ? 'badge-ativo' : 'badge-inativo'}">
+              ${u.ativo !== false ? 'Ativo' : 'Inativo'}
+            </span>
+          </div>
+        </div>
+        <div class="user-card-actions">
+          <button class="btn btn-sm btn-secondary" onclick="editarUsuario(${u.id})" title="Editar">
+            <i class="ph ph-pencil-simple"></i>
+          </button>
+          ${!isMe && u.ativo !== false ? `<button class="btn btn-sm btn-danger" onclick="confirmarDesativar(${u.id},'${esc(u.nome)}')" title="Desativar">
+            <i class="ph ph-trash"></i>
+          </button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function salvarUsuario() {
+    const id    = document.getElementById('usuario-id').value;
+    const nome  = document.getElementById('usr-nome').value.trim();
+    const email = document.getElementById('usr-email').value.trim();
+    const perfil= document.getElementById('usr-perfil').value;
+    const senha = document.getElementById('usr-senha').value;
+
+    if (!nome || !email) { showToast('Nome e e-mail são obrigatórios.', 'aviso'); return; }
+    if (!id && !senha)   { showToast('Senha é obrigatória para novo usuário.', 'aviso'); return; }
+    if (senha && senha.length < 6) { showToast('Senha deve ter ao menos 6 caracteres.', 'aviso'); return; }
+
+    const body = { nome, email, perfil };
+    if (senha) body.senha = senha;
+
+    try {
+      const url    = id ? `/usuarios/api/${id}` : '/usuarios/api/';
+      const method = id ? 'PUT' : 'POST';
+      const r      = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (!r.ok) { showToast(d.erro || 'Erro ao salvar.', 'erro'); return; }
+      showToast(id ? 'Usuário atualizado!' : 'Usuário cadastrado!', 'sucesso');
+      fecharModal('modal-usuario');
+      limparForm();
+      await carregar();
+    } catch {
+      showToast('Erro de conexão.', 'erro');
+    }
+  }
+
+  function limparForm() {
+    ['usuario-id','usr-nome','usr-email','usr-senha'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('usr-perfil').value = 'tecnico';
+    document.getElementById('modal-usuario-titulo').textContent = 'Novo Usuário';
+    document.getElementById('senha-hint').style.display = 'none';
+  }
+
+  function editarUsuario(id) {
+    const u = todosUsuarios.find(x => x.id === id);
+    if (!u) return;
+    document.getElementById('usuario-id').value = u.id;
+    document.getElementById('usr-nome').value   = u.nome  || '';
+    document.getElementById('usr-email').value  = u.email || '';
+    document.getElementById('usr-perfil').value = u.perfil || 'tecnico';
+    document.getElementById('usr-senha').value  = '';
+    document.getElementById('modal-usuario-titulo').textContent = 'Editar Usuário';
+    document.getElementById('senha-hint').style.display = '';
+    abrirModal('modal-usuario');
+  }
+
+  function confirmarDesativar(id, nome) {
+    document.getElementById('confirm-nome').textContent = nome;
+    document.getElementById('btn-confirm-desativ').onclick = () => desativarUsuario(id);
+    abrirModal('modal-confirm');
+  }
+
+  async function desativarUsuario(id) {
+    const r = await fetch(`/usuarios/api/${id}`, { method: 'DELETE' });
+    if (r.ok) {
+      showToast('Usuário desativado.', 'aviso');
+      fecharModal('modal-confirm');
+      await carregar();
+    } else {
+      showToast('Erro ao desativar.', 'erro');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    carregar();
+    document.getElementById('senha-hint').style.display = 'none';
+  });
+</script>
+{% endif %}
+{% endblock %}

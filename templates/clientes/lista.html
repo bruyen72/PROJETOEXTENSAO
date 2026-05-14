@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+{% block title %}Clientes{% endblock %}
+{% block page_title %}
+  <i class="ph ph-users-three" style="color:var(--primary)"></i>
+  Clientes
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Clientes <span class="grad-text">&amp; Equipamentos</span></h1>
+    <p>Gerencie clientes e seus equipamentos cadastrados.</p>
+  </div>
+  <button class="btn btn-primary" onclick="abrirModal('modal-cliente')">
+    <i class="ph ph-plus"></i> Novo Cliente
+  </button>
+</div>
+
+<!-- Filter -->
+<div class="filter-bar">
+  <div class="search-wrap" style="flex:1;min-width:200px">
+    <i class="ph ph-magnifying-glass search-icon"></i>
+    <input type="text" id="busca" class="form-control" placeholder="Buscar por nome, telefone ou e-mail…"
+           oninput="filtrar()">
+  </div>
+  <select id="sel-ativo" class="form-control" onchange="filtrar()" style="max-width:150px;min-height:38px;height:38px">
+    <option value="">Todos</option>
+    <option value="true">Ativos</option>
+    <option value="false">Inativos</option>
+  </select>
+  <button class="btn btn-ghost btn-sm" onclick="carregarClientes()">
+    <i class="ph ph-arrows-clockwise"></i> Atualizar
+  </button>
+</div>
+
+<!-- Stats rápidas -->
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:24px">
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="ph-bold ph-users-three"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="stat-total">0</div>
+      <div class="stat-label">Total de Clientes</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon light"><i class="ph-bold ph-check-circle"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="stat-ativos">0</div>
+      <div class="stat-label">Ativos</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning"><i class="ph-bold ph-radio"></i></div>
+    <div class="stat-info">
+      <div class="stat-value" id="stat-equips">0</div>
+      <div class="stat-label">Equipamentos</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lista -->
+<div id="clientes-grid" class="grid-3" style="margin-bottom:60px"></div>
+
+<!-- ═══ MODAL — Cadastrar/Editar Cliente ══════════════════════════════ -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="ph ph-user-plus"></i>
+        <span id="modal-cliente-titulo">Novo Cliente</span>
+      </div>
+      <button class="modal-close" onclick="fecharModal('modal-cliente')">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cliente-id">
+      <div class="grid-2">
+        <div class="form-group col-2">
+          <label class="form-label">Nome <span class="req">*</span></label>
+          <input type="text" id="cli-nome" class="form-control" placeholder="Nome completo ou razão social">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone / WhatsApp</label>
+          <input type="tel" id="cli-tel" class="form-control" placeholder="(65) 99999-9999">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input type="email" id="cli-email" class="form-control" placeholder="cliente@email.com">
+        </div>
+        <div class="form-group col-2">
+          <label class="form-label">Endereço</label>
+          <input type="text" id="cli-end" class="form-control" placeholder="Rua, número, bairro, cidade">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">
+        <i class="ph ph-floppy-disk"></i> Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL — Equipamentos do Cliente ══════════════════════════════ -->
+<div class="modal-overlay" id="modal-equips">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="ph ph-radio"></i>
+        Equipamentos — <span id="equip-cliente-nome">…</span>
+      </div>
+      <button class="modal-close" onclick="fecharModal('modal-equips')">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="equip-cliente-id">
+
+      <!-- Lista existentes -->
+      <div id="equips-lista" style="margin-bottom:20px"></div>
+
+      <!-- Adicionar novo -->
+      <div class="section-card">
+        <div class="section-header">
+          <span class="section-icon"><i class="ph ph-plus-circle"></i></span>
+          <span class="section-title">Adicionar Equipamento</span>
+        </div>
+        <div class="section-body">
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Tipo <span class="req">*</span></label>
+              <select id="eq-tipo" class="form-control">
+                <option value="">Selecione…</option>
+                <option>Rádio Comunicador</option>
+                <option>Repetidora</option>
+                <option>Base Fixa</option>
+                <option>Veicular</option>
+                <option>Portátil</option>
+                <option>Outro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Marca <span class="req">*</span></label>
+              <input type="text" id="eq-marca" class="form-control" placeholder="Ex.: Motorola">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Modelo <span class="req">*</span></label>
+              <input type="text" id="eq-modelo" class="form-control" placeholder="Ex.: XT460">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nº Série <span class="req">*</span></label>
+              <input type="text" id="eq-serie" class="form-control" placeholder="SN000000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cor / Identificação</label>
+              <input type="text" id="eq-cor" class="form-control" placeholder="Ex.: Preto c/ etiqueta azul">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Canal / Frequência</label>
+              <input type="text" id="eq-canal" class="form-control" placeholder="Ex.: CH5 / 462.650 MHz">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="salvarEquipamento()" style="margin-top:12px">
+            <i class="ph ph-plus"></i> Adicionar Equipamento
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-equips')">Fechar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<button class="btn btn-primary" onclick="abrirModal('modal-cliente')">
+  <i class="ph ph-plus"></i> Novo Cliente
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let todosClientes = [];
+  let totalEquips = 0;
+
+  /* ─── Helpers ───────────────────────────────────────────── */
+  function abrirModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+
+  function fecharModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  /* clicar fora fecha */
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => {
+      if (e.target === o) o.classList.remove('open');
+    });
+  });
+
+  /* ─── Carregar clientes ─────────────────────────────────── */
+  async function carregarClientes() {
+    try {
+      const r = await fetch('/api/clientes/');
+      todosClientes = await r.json();
+      await atualizarStats();
+      filtrar();
+    } catch {
+      showToast('Erro ao carregar clientes.', 'erro');
+    }
+  }
+
+  async function atualizarStats() {
+    const ativos = todosClientes.filter(c => c.ativo).length;
+    document.getElementById('stat-total').textContent  = todosClientes.length;
+    document.getElementById('stat-ativos').textContent = ativos;
+    /* equipamentos: soma de todos */
+    try {
+      let total = 0;
+      await Promise.all(todosClientes.filter(c=>c.ativo).map(async c => {
+        const r = await fetch(`/api/clientes/${c.id}/equipamentos`);
+        const e = await r.json();
+        total += e.length;
+      }));
+      document.getElementById('stat-equips').textContent = total;
+    } catch {}
+  }
+
+  function filtrar() {
+    const q    = (document.getElementById('busca').value || '').toLowerCase();
+    const ativ = document.getElementById('sel-ativo').value;
+    let lista  = todosClientes;
+    if (q)    lista = lista.filter(c =>
+      c.nome?.toLowerCase().includes(q) ||
+      c.telefone?.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q)
+    );
+    if (ativ === 'true')  lista = lista.filter(c => c.ativo);
+    if (ativ === 'false') lista = lista.filter(c => !c.ativo);
+    renderClientes(lista);
+  }
+
+  function renderClientes(lista) {
+    const grid = document.getElementById('clientes-grid');
+    if (!lista.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon"><i class="ph ph-users-three"></i></div>
+        <h3>Nenhum cliente encontrado</h3>
+        <p>Clique em "Novo Cliente" para cadastrar.</p>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = lista.map(c => `
+      <div class="client-card">
+        <div class="client-card-head">
+          <div class="client-avatar">${c.nome[0].toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div class="client-name">${esc(c.nome)}</div>
+            <span class="badge ${c.ativo ? 'badge-ativo' : 'badge-inativo'}" style="margin-top:3px">
+              ${c.ativo ? 'Ativo' : 'Inativo'}
+            </span>
+          </div>
+        </div>
+        <div class="client-body">
+          ${c.telefone ? `<div class="client-info"><i class="ph ph-phone"></i>${esc(c.telefone)}</div>` : ''}
+          ${c.email    ? `<div class="client-info"><i class="ph ph-envelope"></i>${esc(c.email)}</div>` : ''}
+          ${c.endereco ? `<div class="client-info"><i class="ph ph-map-pin"></i><span style="font-size:.78rem">${esc(c.endereco)}</span></div>` : ''}
+        </div>
+        <div class="client-foot">
+          <button class="btn btn-sm btn-ghost" onclick="verEquipamentos(${c.id},'${esc(c.nome)}')">
+            <i class="ph ph-radio"></i> Equipamentos
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="editarCliente(${c.id})">
+            <i class="ph ph-pencil-simple"></i>
+          </button>
+          ${c.ativo ? `<button class="btn btn-sm btn-danger" onclick="desativarCliente(${c.id})">
+            <i class="ph ph-trash"></i>
+          </button>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ─── Salvar cliente ────────────────────────────────────── */
+  async function salvarCliente() {
+    const id   = document.getElementById('cliente-id').value;
+    const nome = document.getElementById('cli-nome').value.trim();
+    if (!nome) { showToast('Nome é obrigatório.', 'aviso'); return; }
+
+    const body = {
+      nome,
+      telefone: document.getElementById('cli-tel').value.trim(),
+      email:    document.getElementById('cli-email').value.trim(),
+      endereco: document.getElementById('cli-end').value.trim(),
+    };
+
+    try {
+      const url    = id ? `/api/clientes/${id}` : '/api/clientes/';
+      const method = id ? 'PUT' : 'POST';
+      const r      = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (!r.ok) { showToast(d.erro || 'Erro ao salvar.', 'erro'); return; }
+      showToast(id ? 'Cliente atualizado.' : 'Cliente cadastrado!', 'sucesso');
+      fecharModal('modal-cliente');
+      limparFormCliente();
+      await carregarClientes();
+    } catch {
+      showToast('Erro de conexão.', 'erro');
+    }
+  }
+
+  function limparFormCliente() {
+    ['cliente-id','cli-nome','cli-tel','cli-email','cli-end'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('modal-cliente-titulo').textContent = 'Novo Cliente';
+  }
+
+  function editarCliente(id) {
+    const c = todosClientes.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('cliente-id').value   = c.id;
+    document.getElementById('cli-nome').value     = c.nome    || '';
+    document.getElementById('cli-tel').value      = c.telefone || '';
+    document.getElementById('cli-email').value    = c.email   || '';
+    document.getElementById('cli-end').value      = c.endereco || '';
+    document.getElementById('modal-cliente-titulo').textContent = 'Editar Cliente';
+    abrirModal('modal-cliente');
+  }
+
+  async function desativarCliente(id) {
+    if (!confirm('Desativar este cliente?')) return;
+    const r = await fetch(`/api/clientes/${id}`, { method: 'DELETE' });
+    if (r.ok) {
+      showToast('Cliente desativado.', 'aviso');
+      await carregarClientes();
+    } else {
+      showToast('Erro ao desativar.', 'erro');
+    }
+  }
+
+  /* ─── Equipamentos ──────────────────────────────────────── */
+  async function verEquipamentos(cid, nome) {
+    document.getElementById('equip-cliente-id').value = cid;
+    document.getElementById('equip-cliente-nome').textContent = nome;
+    await carregarEquipamentos(cid);
+    abrirModal('modal-equips');
+  }
+
+  async function carregarEquipamentos(cid) {
+    const lista = document.getElementById('equips-lista');
+    lista.innerHTML = '<p style="color:var(--text-2);font-size:.85rem">Carregando…</p>';
+    try {
+      const r    = await fetch(`/api/clientes/${cid}/equipamentos`);
+      const data = await r.json();
+      if (!data.length) {
+        lista.innerHTML = `<div class="empty-state" style="padding:24px">
+          <div class="empty-icon"><i class="ph ph-radio"></i></div>
+          <p>Nenhum equipamento cadastrado.</p>
+        </div>`;
+        return;
+      }
+      lista.innerHTML = `<div class="table-wrap"><table class="data-table">
+        <thead><tr>
+          <th>Tipo</th><th>Marca / Modelo</th><th>Nº Série</th>
+          <th>Canal / Freq.</th><th>Cor</th>
+        </tr></thead>
+        <tbody>
+          ${data.map(e => `<tr>
+            <td><span class="tag">${esc(e.tipo)}</span></td>
+            <td><strong>${esc(e.marca)}</strong> ${esc(e.modelo)}</td>
+            <td><code style="font-size:.8rem;color:var(--primary-l)">${esc(e.numero_serie)}</code></td>
+            <td>${esc(e.canal_frequencia)||'—'}</td>
+            <td>${esc(e.cor_identificacao)||'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    } catch {
+      lista.innerHTML = '<p style="color:var(--danger)">Erro ao carregar equipamentos.</p>';
+    }
+  }
+
+  async function salvarEquipamento() {
+    const cid   = document.getElementById('equip-cliente-id').value;
+    const tipo  = document.getElementById('eq-tipo').value.trim();
+    const marca = document.getElementById('eq-marca').value.trim();
+    const modelo= document.getElementById('eq-modelo').value.trim();
+    const serie = document.getElementById('eq-serie').value.trim();
+    if (!tipo||!marca||!modelo||!serie) {
+      showToast('Preencha todos os campos obrigatórios.', 'aviso');
+      return;
+    }
+    try {
+      const r = await fetch(`/api/clientes/${cid}/equipamentos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo, marca, modelo,
+          numero_serie:     serie,
+          cor_identificacao: document.getElementById('eq-cor').value.trim(),
+          canal_frequencia:  document.getElementById('eq-canal').value.trim(),
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) { showToast(d.erro || 'Erro ao salvar.', 'erro'); return; }
+      showToast('Equipamento adicionado!', 'sucesso');
+      ['eq-tipo','eq-marca','eq-modelo','eq-serie','eq-cor','eq-canal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+      });
+      await carregarEquipamentos(cid);
+      await atualizarStats();
+    } catch {
+      showToast('Erro de conexão.', 'erro');
+    }
+  }
+
+  /* ─── Init ──────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', carregarClientes);
+</script>
+{% endblock %}

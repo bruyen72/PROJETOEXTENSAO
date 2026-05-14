@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070d07">
   <title>Login — Gerenciador OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 </head>
 <body>
 <div id="toast-container"></div>
@@ -15,7 +17,9 @@
   <div class="login-box">
 
     <div class="login-logo">
-      <div class="logo-circle">📡</div>
+      <div class="logo-circle">
+        <i class="ph-bold ph-broadcast"></i>
+      </div>
       <div>
         <h1 class="grad-text">Gerenciador OS</h1>
         <p>para Técnicos de Campo</p>
@@ -24,7 +28,8 @@
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
-        <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 14px;font-size:.85rem;color:#fca5a5;margin-bottom:16px">
+        <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 14px;font-size:.85rem;color:#fca5a5;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <i class="ph ph-warning" style="flex-shrink:0"></i>
           {{ message }}
         </div>
       {% endfor %}
@@ -32,41 +37,69 @@
 
     <form method="POST" action="{{ url_for('auth.login') }}">
       <div class="form-group" style="margin-bottom:16px">
-        <label class="form-label">E-mail</label>
-        <input type="email" name="email" class="form-control" placeholder="seu@email.com" required autofocus>
+        <label class="form-label">
+          <i class="ph ph-envelope" style="color:var(--primary)"></i>
+          E-mail
+        </label>
+        <input type="email" name="email" class="form-control"
+               placeholder="seu@email.com" required autofocus>
       </div>
 
-      <div class="form-group" style="margin-bottom:24px">
-        <label class="form-label">Senha</label>
-        <input type="password" name="senha" class="form-control" placeholder="••••••••" required>
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">
+          <i class="ph ph-lock-key" style="color:var(--primary)"></i>
+          Senha
+        </label>
+        <div class="pass-wrap">
+          <input type="password" id="senha-input" name="senha" class="form-control"
+                 placeholder="••••••••" required>
+          <button type="button" class="pass-toggle" onclick="toggleSenha()">
+            <i class="ph ph-eye" id="pass-eye"></i>
+          </button>
+        </div>
       </div>
 
       <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-2);margin-bottom:24px;cursor:pointer">
-        <input type="checkbox" name="remember" style="accent-color:var(--indigo)"> Manter conectado
+        <input type="checkbox" name="remember" style="accent-color:var(--primary)">
+        Manter conectado
       </label>
 
       <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center">
+        <i class="ph ph-sign-in"></i>
         Entrar no sistema
       </button>
     </form>
 
     <div class="form-divider"></div>
 
-    <p style="font-size:.75rem;color:var(--text-3);text-align:center">
+    <p style="font-size:.74rem;color:var(--text-dim);text-align:center;line-height:1.6">
+      <i class="ph ph-shield-check" style="color:var(--primary);font-size:.9rem"></i>
       Acesso restrito a técnicos autorizados.<br>
-      Para suporte, contate o administrador.
+      Para suporte, contate o administrador do sistema.
     </p>
   </div>
 </div>
 
 <script>
-  function showToast(msg,tipo){
-    const c=document.getElementById('toast-container');
-    const t=document.createElement('div');
-    t.className='toast '+(tipo==='danger'?'erro':tipo);
-    t.textContent=msg;
+  function toggleSenha() {
+    const inp = document.getElementById('senha-input');
+    const eye = document.getElementById('pass-eye');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      eye.className = 'ph ph-eye-slash';
+    } else {
+      inp.type = 'password';
+      eye.className = 'ph ph-eye';
+    }
+  }
+
+  function showToast(msg, tipo) {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = 'toast ' + (tipo === 'danger' ? 'erro' : tipo);
+    t.textContent = msg;
     c.appendChild(t);
-    setTimeout(()=>t.remove(),3400);
+    setTimeout(() => t.remove(), 3400);
   }
 </script>
 </body>
