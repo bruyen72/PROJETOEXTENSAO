@@ -325,33 +325,29 @@
 
     .env-tag span { width: 6px; height: 6px; background: #16a34a; border-radius: 50%; display: inline-block; }
 
+    /* ── Canvas ───────────────────────────────────────── */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
     /* ── Responsive ───────────────────────────────────── */
     @media (max-width: 480px) {
       .login-card { padding: 40px 28px 36px; margin: 16px; }
-      .deco-1, .deco-2, .deco-3, .deco-4 { display: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- Decoração geométrica -->
-<div class="deco deco-1"></div>
-<div class="deco deco-2"></div>
-<div class="deco deco-3"></div>
-<div class="deco deco-4"></div>
-<div class="deco-dot deco-dot-1"></div>
-<div class="deco-dot deco-dot-2"></div>
-<div class="deco-dot deco-dot-3"></div>
-<div class="deco-dot deco-dot-4"></div>
-<div class="deco-dot deco-dot-5"></div>
-<div class="deco-dot deco-dot-6"></div>
-<div class="deco-line deco-line-1"></div>
-<div class="deco-line deco-line-2"></div>
+<!-- Canvas de animação -->
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
 
 <div id="toast-container"></div>
 
-<!-- Card branco -->
-<div class="login-card">
+<!-- Card branco (acima do canvas) -->
+<div class="login-card" style="position:relative;z-index:1">
 
   <!-- Logo -->
   <div class="login-logo">
@@ -428,6 +424,7 @@
 
 </div>
 
+<script src="/static/js/bg-animation.js" defer></script>
 <script>
   function toggleSenha() {
     const inp = document.getElementById('senha');
