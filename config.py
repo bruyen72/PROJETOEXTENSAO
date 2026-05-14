@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from sqlalchemy.engine import URL
 
 load_dotenv()
 
@@ -10,7 +11,7 @@ class Config:
     SECRET_KEY    = os.environ.get('SECRET_KEY', 'gerenciador-os-dev-2026-change-me')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # 20 MB
+    MAX_CONTENT_LENGTH = 20 * 1024 * 1024
 
 
 class SQLiteConfig(Config):
@@ -19,14 +20,15 @@ class SQLiteConfig(Config):
 
 
 class SupabaseConfig(Config):
-    """
-    Lê DATABASE_URL do ambiente (Render env var).
-    Formato Supabase Transaction Pooler:
-      postgresql://postgres.REF:SENHA@aws-0-REGIAO.pooler.supabase.com:6543/postgres
-    """
-    raw = os.environ.get('DATABASE_URL', '')
-    # SQLAlchemy exige postgresql:// (não postgres://)
-    SQLALCHEMY_DATABASE_URI = raw.replace('postgres://', 'postgresql://', 1) if raw else ''
+    # Monta a URL usando SQLAlchemy — trata qualquer caractere especial na senha
+    SQLALCHEMY_DATABASE_URI = URL.create(
+        drivername = 'postgresql+psycopg2',
+        username   = os.environ.get('DB_USER', 'postgres'),
+        password   = os.environ.get('DB_PASS', ''),
+        host       = os.environ.get('DB_HOST', ''),
+        port       = int(os.environ.get('DB_PORT', '5432')),
+        database   = os.environ.get('DB_NAME', 'postgres'),
+    )
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle':  300,
@@ -35,6 +37,5 @@ class SupabaseConfig(Config):
     DEBUG = False
 
 
-# ── Seleciona config ativa ──────────────────────────────────
-# Se DATABASE_URL estiver definida → usa Supabase; senão → SQLite (dev local)
-ActiveConfig = SupabaseConfig if os.environ.get('DATABASE_URL') else SQLiteConfig
+# Se DB_HOST estiver definido → Supabase; senão → SQLite local
+ActiveConfig = SupabaseConfig if os.environ.get('DB_HOST') else SQLiteConfig
