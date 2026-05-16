@@ -88,9 +88,43 @@
           <label class="form-label">E-mail</label>
           <input type="email" id="cli-email" class="form-control" placeholder="cliente@email.com">
         </div>
+
+        <!-- CEP com busca automática ViaCEP -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="ph ph-map-pin" style="color:var(--primary)"></i> CEP
+          </label>
+          <div style="position:relative">
+            <input type="text" id="cli-cep" class="form-control" placeholder="00000-000"
+                   maxlength="9" oninput="mascaraCep(this)" onblur="buscarCep()">
+            <span id="cep-spinner" style="display:none;position:absolute;right:10px;top:50%;
+                  transform:translateY(-50%);font-size:.85rem;color:var(--primary)">
+              <i class="ph ph-circle-notch" style="animation:spin .8s linear infinite"></i>
+            </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Número / Complemento</label>
+          <input type="text" id="cli-numero" class="form-control" placeholder="Ex.: 123, Apto 4">
+        </div>
         <div class="form-group col-2">
-          <label class="form-label">Endereço</label>
-          <input type="text" id="cli-end" class="form-control" placeholder="Rua, número, bairro, cidade">
+          <label class="form-label">Logradouro</label>
+          <input type="text" id="cli-logradouro" class="form-control" placeholder="Preenchido automaticamente pelo CEP">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bairro</label>
+          <input type="text" id="cli-bairro" class="form-control" placeholder="Preenchido automaticamente">
+        </div>
+        <div class="form-group" style="display:flex;gap:8px">
+          <div style="flex:1">
+            <label class="form-label">Cidade</label>
+            <input type="text" id="cli-cidade" class="form-control" placeholder="Cidade">
+          </div>
+          <div style="width:70px">
+            <label class="form-label">UF</label>
+            <input type="text" id="cli-uf" class="form-control" placeholder="MT" maxlength="2"
+                   style="text-transform:uppercase">
+          </div>
         </div>
       </div>
     </div>
@@ -277,6 +311,51 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  /* ─── ViaCEP ───────────────────────────────────────────── */
+  function mascaraCep(inp) {
+    let v = inp.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+    inp.value = v;
+    if (v.replace(/\D/g, '').length === 8) buscarCep();
+  }
+
+  async function buscarCep() {
+    const cep = (document.getElementById('cli-cep').value || '').replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    const spinner = document.getElementById('cep-spinner');
+    spinner.style.display = '';
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const d = await r.json();
+      if (d.erro) { showToast('CEP não encontrado.', 'aviso'); return; }
+      document.getElementById('cli-logradouro').value = d.logradouro || '';
+      document.getElementById('cli-bairro').value     = d.bairro     || '';
+      document.getElementById('cli-cidade').value     = d.localidade || '';
+      document.getElementById('cli-uf').value         = (d.uf || '').toUpperCase();
+      document.getElementById('cli-numero').focus();
+    } catch {
+      showToast('Erro ao consultar CEP.', 'erro');
+    } finally {
+      spinner.style.display = 'none';
+    }
+  }
+
+  function _montarEndereco() {
+    const logradouro = document.getElementById('cli-logradouro').value.trim();
+    const numero     = document.getElementById('cli-numero').value.trim();
+    const bairro     = document.getElementById('cli-bairro').value.trim();
+    const cidade     = document.getElementById('cli-cidade').value.trim();
+    const uf         = document.getElementById('cli-uf').value.trim().toUpperCase();
+    const cep        = document.getElementById('cli-cep').value.trim();
+    const partes = [
+      logradouro + (numero ? `, ${numero}` : ''),
+      bairro,
+      cidade + (uf ? `/${uf}` : ''),
+      cep ? `CEP ${cep}` : '',
+    ].filter(Boolean);
+    return partes.join(' — ');
+  }
+
   /* ─── Salvar cliente ────────────────────────────────────── */
   async function salvarCliente() {
     const id   = document.getElementById('cliente-id').value;
@@ -287,7 +366,7 @@
       nome,
       telefone: document.getElementById('cli-tel').value.trim(),
       email:    document.getElementById('cli-email').value.trim(),
-      endereco: document.getElementById('cli-end').value.trim(),
+      endereco: _montarEndereco(),
     };
 
     try {
@@ -310,20 +389,26 @@
   }
 
   function limparFormCliente() {
-    ['cliente-id','cli-nome','cli-tel','cli-email','cli-end'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
+    ['cliente-id','cli-nome','cli-tel','cli-email',
+     'cli-cep','cli-numero','cli-logradouro','cli-bairro','cli-cidade','cli-uf']
+      .forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('modal-cliente-titulo').textContent = 'Novo Cliente';
   }
 
   function editarCliente(id) {
     const c = todosClientes.find(x => x.id === id);
     if (!c) return;
-    document.getElementById('cliente-id').value   = c.id;
-    document.getElementById('cli-nome').value     = c.nome    || '';
-    document.getElementById('cli-tel').value      = c.telefone || '';
-    document.getElementById('cli-email').value    = c.email   || '';
-    document.getElementById('cli-end').value      = c.endereco || '';
+    document.getElementById('cliente-id').value    = c.id;
+    document.getElementById('cli-nome').value      = c.nome      || '';
+    document.getElementById('cli-tel').value       = c.telefone  || '';
+    document.getElementById('cli-email').value     = c.email     || '';
+    /* endereço composto: mostra no logradouro para referência */
+    document.getElementById('cli-cep').value       = '';
+    document.getElementById('cli-numero').value    = '';
+    document.getElementById('cli-logradouro').value= c.endereco  || '';
+    document.getElementById('cli-bairro').value    = '';
+    document.getElementById('cli-cidade').value    = '';
+    document.getElementById('cli-uf').value        = '';
     document.getElementById('modal-cliente-titulo').textContent = 'Editar Cliente';
     abrirModal('modal-cliente');
   }

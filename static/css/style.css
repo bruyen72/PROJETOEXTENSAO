@@ -1407,6 +1407,10 @@ body.offline .offline-banner { display: flex; }
 }
 .pulse { animation: pulse-glow 2s infinite; }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ─── Skeleton loader ─────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -800px 0; }
