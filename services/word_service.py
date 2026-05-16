@@ -1,5 +1,6 @@
 """Geração de documento Word (.docx) da OS usando python-docx."""
-import os
+import os, base64
+from io import BytesIO
 from datetime import datetime
 from docx import Document
 from docx.shared import Pt, RGBColor, Inches, Cm
@@ -139,8 +140,27 @@ def gerar_word_os(os_obj, upload_folder):
     sig_t.style = 'Table Grid'
     sig_t.rows[0].cells[0].text = 'Assinatura do Cliente'
     sig_t.rows[0].cells[1].text = 'Assinatura do Técnico'
-    sig_t.rows[1].cells[0].text = '\n\n\n'
-    sig_t.rows[1].cells[1].text = '\n\n\n'
+
+    def _inserir_sig_word(cell, b64):
+        """Insere imagem de assinatura em uma célula Word."""
+        try:
+            if not b64:
+                cell.paragraphs[0].add_run('\n\n\n')
+                return
+            data = b64.split(',', 1)[-1] if ',' in b64 else b64
+            buf  = BytesIO(base64.b64decode(data))
+            run  = cell.paragraphs[0].add_run()
+            run.add_picture(buf, width=Cm(6))
+        except Exception:
+            cell.paragraphs[0].add_run('\n\n\n')
+
+    sig_cli = sig_tec = None
+    if hasattr(os_obj, 'assinatura') and os_obj.assinatura:
+        sig_cli = os_obj.assinatura.sig_cliente
+        sig_tec = os_obj.assinatura.sig_tecnico
+
+    _inserir_sig_word(sig_t.rows[1].cells[0], sig_cli)
+    _inserir_sig_word(sig_t.rows[1].cells[1], sig_tec)
 
     # ── Rodapé ───────────────────────────────────────────
     doc.add_paragraph()

@@ -1,11 +1,12 @@
 """Geração de PDF da OS usando ReportLab — Design Green Professional."""
-import os
+import os, base64
+from io import BytesIO
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table,
-                                 TableStyle, HRFlowable)
+                                 TableStyle, HRFlowable, Image as RLImage)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
@@ -178,17 +179,41 @@ def gerar_pdf_os(os_obj, upload_folder):
 
     # ── 6. Assinaturas ────────────────────────────────────
     secao('6. ASSINATURAS')
+
+    def _sig_img(b64, w, h):
+        """Converte base64 PNG (canvas) para imagem ReportLab."""
+        try:
+            if not b64:
+                return None
+            data = b64.split(',', 1)[-1] if ',' in b64 else b64
+            buf  = BytesIO(base64.b64decode(data))
+            return RLImage(buf, width=w, height=h)
+        except Exception:
+            return None
+
+    sig_cli = sig_tec = None
+    if hasattr(os_obj, 'assinatura') and os_obj.assinatura:
+        sig_cli = _sig_img(os_obj.assinatura.sig_cliente, 72*mm, 28*mm)
+        sig_tec = _sig_img(os_obj.assinatura.sig_tecnico, 72*mm, 28*mm)
+
+    label_cli = Paragraph('Assinatura do Cliente',             ParagraphStyle('sl', fontName='Helvetica', fontSize=8, textColor=MUTED))
+    label_tec = Paragraph('Assinatura do Técnico Responsável', ParagraphStyle('sl', fontName='Helvetica', fontSize=8, textColor=MUTED))
+    img_cli   = sig_cli or Spacer(1, 28*mm)
+    img_tec   = sig_tec or Spacer(1, 28*mm)
+
     sig_t = Table(
-        [['Assinatura do Cliente', 'Assinatura do Técnico Responsável']],
+        [[label_cli,  label_tec],
+         [img_cli,    img_tec  ]],
         colWidths=[87*mm, 88*mm]
     )
     sig_t.setStyle(TableStyle([
-        ('FONTNAME',      (0,0), (-1,-1), 'Helvetica'),
         ('FONTSIZE',      (0,0), (-1,-1), 8),
-        ('TEXTCOLOR',     (0,0), (-1,-1), MUTED),
-        ('TOPPADDING',    (0,0), (-1,-1), 35),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING',    (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING',   (0,0), (-1,-1), 6),
         ('GRID',          (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+        ('ALIGN',         (0,1), (-1,1), 'CENTER'),
+        ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
     ]))
     elements.append(sig_t)
 
