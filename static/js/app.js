@@ -224,15 +224,16 @@ async function salvarOS() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(getFormData()),
     });
-    const data = await resp.json();
+    let data = {};
+    try { data = await resp.json(); } catch { /* resposta não era JSON */ }
     if (resp.ok) {
       showToast(`OS ${data.numero_os} salva com sucesso!`, 'sucesso');
       setTimeout(() => window.location.href = '/api/os/lista', 1500);
     } else {
-      showToast(data.erro || 'Erro ao salvar.', 'erro');
+      showToast(data.erro || `Erro ${resp.status} ao salvar. Tente novamente.`, 'erro');
     }
   } catch {
-    showToast('Sem conexão — salve offline.', 'aviso');
+    showToast('Sem conexão com o servidor — salve offline.', 'aviso');
   }
 }
 

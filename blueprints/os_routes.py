@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import date, datetime
+from datetime import date, datetime, time as dtime
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
@@ -91,65 +91,95 @@ def criar():
 
     numero_os = data.get('numero_os') or f"OS-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
-    os_obj = OrdemServico(
-        numero_os          = numero_os,
-        descricao          = data.get('descricao'),
-        status             = data.get('status', 'Aberto'),
-        prioridade         = prioridade,
-        tipo_ocorrencia    = tipo_ocorrencia,
-        acompanhante       = data.get('acompanhante'),  # RF12
-        data_entrada       = date.fromisoformat(data['data_entrada']),
-        hora_entrada       = data.get('hora_entrada') or None,
-        condicoes_fisicas  = data.get('condicoes_fisicas') or None,
-        defeito_relatado   = data.get('defeito_relatado') or None,
-        status_equipamento = data.get('status_equipamento') or None,
-        laudo_tecnico      = data.get('laudo_tecnico') or None,
-        solucao_aplicada   = data.get('solucao_aplicada') or None,
-        pecas_utilizadas   = data.get('pecas_utilizadas') or None,
-        termos_observacoes = data.get('termos_observacoes') or None,
-        geo_lat            = float(data['geo_lat']) if data.get('geo_lat') else None,
-        geo_lng            = float(data['geo_lng']) if data.get('geo_lng') else None,
-        geo_endereco       = data.get('geo_endereco') or None,
-        cliente_id         = data['cliente_id'],
-        tecnico_id         = data.get('tecnico_id'),
-        criado_por         = current_user.id,
-    )
-    db.session.add(os_obj)
-    db.session.flush()
+    def _hora(s):
+        try:
+            return dtime.fromisoformat(s) if s else None
+        except Exception:
+            return None
 
-    # Acessórios
-    for nome in (data.get('acessorios') or []):
-        db.session.add(OsAcessorio(os_id=os_obj.id, nome=nome))
+    def _data(s):
+        try:
+            return date.fromisoformat(s) if s else None
+        except Exception:
+            return None
 
-    # Checklist
-    for item in (data.get('checklist') or []):
-        db.session.add(OsChecklist(
-            os_id=os_obj.id, item_id=item['id'], item_nome=item['nome'],
-            feito=item.get('feito', False),
-            data_verificacao=item.get('data') or None,
-            tecnico_verificador=item.get('tecnico') or None,
-        ))
+    def _sig_valida(s):
+        """Retorna a assinatura só se o usuário realmente desenhou algo."""
+        if not s or not s.startswith('data:image/'):
+            return None
+        # PNG em branco tem menos de 200 bytes em base64; se for maior, tem conteúdo real
+        b64 = s.split(',', 1)[-1] if ',' in s else s
+        return s if len(b64) > 200 else None
 
-    # Assinatura
-    if data.get('sig_cliente') or data.get('sig_tecnico'):
-        db.session.add(OsAssinatura(
-            os_id=os_obj.id,
-            sig_cliente=data.get('sig_cliente'),
-            sig_tecnico=data.get('sig_tecnico'),
-        ))
-
-    # Notificação automática para urgente
-    if os_obj.prioridade == 'Urgente':
-        notif = Notificacao(
-            usuario_id=current_user.id,
-            os_id=os_obj.id,
-            mensagem=f'OS urgente criada: {numero_os}',
-            tipo='urgente',
+    try:
+        os_obj = OrdemServico(
+            numero_os          = numero_os,
+            descricao          = data.get('descricao') or None,
+            status             = data.get('status', 'Aberto'),
+            prioridade         = prioridade,
+            tipo_ocorrencia    = tipo_ocorrencia or None,
+            acompanhante       = data.get('acompanhante') or None,
+            data_entrada       = date.fromisoformat(data['data_entrada']),
+            hora_entrada       = _hora(data.get('hora_entrada')),
+            condicoes_fisicas  = data.get('condicoes_fisicas') or None,
+            defeito_relatado   = data.get('defeito_relatado') or None,
+            status_equipamento = data.get('status_equipamento') or None,
+            laudo_tecnico      = data.get('laudo_tecnico') or None,
+            solucao_aplicada   = data.get('solucao_aplicada') or None,
+            pecas_utilizadas   = data.get('pecas_utilizadas') or None,
+            termos_observacoes = data.get('termos_observacoes') or None,
+            geo_lat            = float(data['geo_lat']) if data.get('geo_lat') else None,
+            geo_lng            = float(data['geo_lng']) if data.get('geo_lng') else None,
+            geo_endereco       = data.get('geo_endereco') or None,
+            cliente_id         = data['cliente_id'],
+            tecnico_id         = data.get('tecnico_id') or None,
+            criado_por         = current_user.id,
         )
-        db.session.add(notif)
+        db.session.add(os_obj)
+        db.session.flush()
 
-    db.session.commit()
-    return jsonify({'id': os_obj.id, 'numero_os': os_obj.numero_os}), 201
+        # Acessórios
+        for nome in (data.get('acessorios') or []):
+            if nome:
+                db.session.add(OsAcessorio(os_id=os_obj.id, nome=nome))
+
+        # Checklist
+        for item in (data.get('checklist') or []):
+            db.session.add(OsChecklist(
+                os_id=os_obj.id,
+                item_id=item['id'],
+                item_nome=item['nome'],
+                feito=item.get('feito', False),
+                data_verificacao=_data(item.get('data')),
+                tecnico_verificador=item.get('tecnico') or None,
+            ))
+
+        # Assinatura — só salva se houver traço real
+        sig_cli = _sig_valida(data.get('sig_cliente'))
+        sig_tec = _sig_valida(data.get('sig_tecnico'))
+        if sig_cli or sig_tec:
+            db.session.add(OsAssinatura(
+                os_id=os_obj.id,
+                sig_cliente=sig_cli,
+                sig_tecnico=sig_tec,
+            ))
+
+        # Notificação automática para urgente
+        if os_obj.prioridade == 'Urgente':
+            db.session.add(Notificacao(
+                usuario_id=current_user.id,
+                os_id=os_obj.id,
+                mensagem=f'OS urgente criada: {numero_os}',
+                tipo='urgente',
+            ))
+
+        db.session.commit()
+        return jsonify({'id': os_obj.id, 'numero_os': os_obj.numero_os}), 201
+
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error('Erro ao criar OS: %s', exc, exc_info=True)
+        return jsonify({'erro': f'Erro interno: {exc}'}), 500
 
 
 @os_bp.route('/', methods=['GET'])
