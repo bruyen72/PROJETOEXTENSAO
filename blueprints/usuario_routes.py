@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, render_template, request, abort
 from flask_login import login_required, current_user
-from models import db, Usuario
+from models import db, Usuario, Tecnico
 
 usuario_bp = Blueprint('usuarios', __name__)
 
@@ -48,6 +48,12 @@ def criar():
     u = Usuario(nome=nome, email=email, perfil=perfil)
     u.set_senha(senha)
     db.session.add(u)
+    db.session.flush()
+
+    # Técnicos precisam de registro na tabela Tecnico para aparecer no dropdown de OS
+    if perfil == 'tecnico':
+        db.session.add(Tecnico(usuario_id=u.id))
+
     db.session.commit()
     d = u.to_dict()
     d['ativo'] = u.ativo

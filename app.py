@@ -4,7 +4,7 @@ from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from sqlalchemy import text
 from config import ActiveConfig
-from models import db, Usuario
+from models import db, Usuario, Tecnico
 
 login_manager = LoginManager()
 migrate = Migrate()
@@ -105,6 +105,19 @@ def _criar_admin_padrao():
         admin = Usuario(nome='Administrador', email='admin@gerenciadoros.local', perfil='admin')
         admin.set_senha('Admin@123')
         db.session.add(admin)
+        db.session.commit()
+
+    # Garante que todo usuário técnico tem registro na tabela Tecnico
+    tecnicos_sem_registro = (
+        Usuario.query
+        .filter_by(perfil='tecnico', ativo=True)
+        .filter(~Usuario.tecnico.has())
+        .all()
+    )
+    for u in tecnicos_sem_registro:
+        db.session.add(Tecnico(usuario_id=u.id))
+        print(f"✓ Registro Tecnico criado para usuário '{u.nome}'")
+    if tecnicos_sem_registro:
         db.session.commit()
 
 
