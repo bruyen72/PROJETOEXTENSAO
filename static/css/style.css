@@ -1297,7 +1297,14 @@ body.offline .offline-banner { display: flex; }
   font-weight: 700;
   font-size: .9rem;
   color: var(--primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
 }
+
+.os-card-top { min-width: 0; }
 
 .os-card-body { padding: 14px 16px; flex: 1; }
 .os-client { font-weight: 600; margin-bottom: 4px; }
