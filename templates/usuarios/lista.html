@@ -236,7 +236,12 @@
     }
     grid.innerHTML = lista.map(u => {
       const isMe = u.email === '{{ current_user.email }}';
-      return `<div class="user-card">
+      const deletarBtn = (!isMe && u.ativo !== false)
+        ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();confirmarDesativar(${u.id},'${esc(u.nome)}')" title="Desativar">
+             <i class="ph ph-trash"></i>
+           </button>`
+        : '';
+      return `<div class="user-card" style="cursor:pointer" onclick="editarUsuario(${u.id})" title="Clique para editar">
         <div class="avatar lg">${u.nome[0].toUpperCase()}</div>
         <div class="user-card-info">
           <div class="user-card-name">
@@ -254,13 +259,11 @@
             </span>
           </div>
         </div>
-        <div class="user-card-actions">
+        <div class="user-card-actions" onclick="event.stopPropagation()">
           <button class="btn btn-sm btn-secondary" onclick="editarUsuario(${u.id})" title="Editar">
             <i class="ph ph-pencil-simple"></i>
           </button>
-          ${!isMe && u.ativo !== false ? `<button class="btn btn-sm btn-danger" onclick="confirmarDesativar(${u.id},'${esc(u.nome)}')" title="Desativar">
-            <i class="ph ph-trash"></i>
-          </button>` : ''}
+          ${deletarBtn}
         </div>
       </div>`;
     }).join('');
@@ -344,6 +347,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    /* garante filtros sempre em branco ao abrir a página */
+    document.getElementById('busca').value      = '';
+    document.getElementById('sel-perfil').value = '';
+    document.getElementById('sel-ativo').value  = '';
     carregar();
     document.getElementById('senha-hint').style.display = 'none';
   });
