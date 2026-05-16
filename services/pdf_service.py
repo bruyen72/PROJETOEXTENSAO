@@ -196,7 +196,7 @@ def gerar_pdf_os(os_obj, upload_folder):
     elements.append(Spacer(1, 4*mm))
     elements.append(HRFlowable(width='100%', thickness=0.5, color=GREEN))
     elements.append(Paragraph(
-        f'Gerenciador OS para Campo · UniSENAI MT · Gerado em {datetime.now().strftime("%d/%m/%Y às %H:%M")}',
+        f'TECPOINT · Gerenciador OS para Campo · UniSENAI MT · Gerado em {datetime.now().strftime("%d/%m/%Y às %H:%M")}',
         foot_s
     ))
 

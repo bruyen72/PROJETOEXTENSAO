@@ -145,7 +145,7 @@ def gerar_word_os(os_obj, upload_folder):
     # ── Rodapé ───────────────────────────────────────────
     doc.add_paragraph()
     footer_p = doc.add_paragraph(
-        f'Gerenciador OS para Campo — Gerado em {datetime.now().strftime("%d/%m/%Y %H:%M")}'
+        f'TECPOINT · Gerenciador OS para Campo · UniSENAI MT · Gerado em {datetime.now().strftime("%d/%m/%Y %H:%M")}'
     )
     footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     footer_p.runs[0].font.size = Pt(7)
