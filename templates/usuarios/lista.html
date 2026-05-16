@@ -177,12 +177,7 @@
 <script>
   let todosUsuarios = [];
 
-  function abrirModal(id) { document.getElementById(id).classList.add('open'); }
-  function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
-
-  document.querySelectorAll('.modal-overlay').forEach(o => {
-    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
-  });
+  /* abrirModal / fecharModal definidos globalmente em base.html */
 
   function togglePass() {
     const inp = document.getElementById('usr-senha');

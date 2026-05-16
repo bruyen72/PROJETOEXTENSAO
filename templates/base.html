@@ -278,6 +278,14 @@ async function lerTodasNotifs() {
   carregarNotifs();
 }
 
+/* ── Modais globais ───────────────────────────────────── */
+function abrirModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
 /* ── Offline ──────────────────────────────────────────── */
 function atualizarOffline() {
   document.body.classList.toggle('offline', !navigator.onLine);
