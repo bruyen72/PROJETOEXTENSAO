@@ -896,8 +896,9 @@ select.form-control option { background: var(--surface-2); color: var(--text); }
 }
 
 .sig-canvas-wrap {
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
+  background: #ffffff;
   background: rgba(255,255,255,.03);
   overflow: hidden;
   cursor: crosshair;

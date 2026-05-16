@@ -26,8 +26,8 @@ function initSig(canvasId) {
   }
 
   const pad = new SignaturePad(canvas, {
-    penColor:        'rgb(241, 245, 249)', /* branco suave sobre fundo escuro */
-    backgroundColor: 'rgba(0, 0, 0, 0)',   /* transparente */
+    penColor:        'rgb(10, 10, 10)',    /* preto — visível no PDF/Word */
+    backgroundColor: 'rgb(255, 255, 255)', /* fundo branco */
     minWidth:        1.5,
     maxWidth:        3,
   });
