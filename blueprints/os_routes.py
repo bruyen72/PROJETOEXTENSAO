@@ -126,6 +126,7 @@ def criar():
             tipo_ocorrencia    = tipo_ocorrencia or None,
             acompanhante       = data.get('acompanhante') or None,
             data_entrada       = date.fromisoformat(data['data_entrada']),
+            data_saida         = _data(data.get('data_saida')),
             hora_entrada       = _hora(data.get('hora_entrada')),
             condicoes_fisicas  = data.get('condicoes_fisicas') or None,
             defeito_relatado   = data.get('defeito_relatado') or None,

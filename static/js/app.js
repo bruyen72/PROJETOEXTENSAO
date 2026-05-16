@@ -163,6 +163,8 @@ function getFormData() {
     numero_os:          val('numero_os'),
     data_entrada:       val('data_entrada'),
     hora_entrada:       val('hora_entrada'),
+    data_saida:         val('data_saida'),
+    acompanhante:       val('acompanhante'),
     cliente_id:         val('cliente_id') ? parseInt(val('cliente_id')) : null,
     tipo_ocorrencia:    val('tipo_ocorrencia'),
     tecnico_id:         val('tecnico_id') ? parseInt(val('tecnico_id')) : null,
@@ -190,7 +192,6 @@ function getFormData() {
     sig_cliente:        getSigBase64('sig-cliente'),
     sig_tecnico:        getSigBase64('sig-tecnico'),
     checklist:          checklist,
-    data_conclusao:     val('data_conclusao'),
   };
 }
 
