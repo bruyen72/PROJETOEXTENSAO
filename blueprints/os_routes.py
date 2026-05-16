@@ -89,7 +89,13 @@ def criar():
     if tipo_ocorrencia and tipo_ocorrencia not in TIPOS_OCORRENCIA:
         return jsonify({'erro': f'Tipo de ocorrência inválido. Valores aceitos: {", ".join(TIPOS_OCORRENCIA)}'}), 422
 
-    numero_os = data.get('numero_os') or f"OS-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+    numero_os = (data.get('numero_os') or '').strip()
+    if not numero_os:
+        numero_os = f"OS-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+
+    # Verifica duplicata ANTES de tentar inserir
+    if OrdemServico.query.filter_by(numero_os=numero_os).first():
+        return jsonify({'erro': f'Número de OS "{numero_os}" já existe. Use um número diferente.'}), 409
 
     def _hora(s):
         try:
@@ -179,7 +185,10 @@ def criar():
     except Exception as exc:
         db.session.rollback()
         current_app.logger.error('Erro ao criar OS: %s', exc, exc_info=True)
-        return jsonify({'erro': f'Erro interno: {exc}'}), 500
+        msg = str(exc)
+        if 'UniqueViolation' in msg or 'unique constraint' in msg.lower():
+            return jsonify({'erro': f'Número de OS "{numero_os}" já existe. Use um número diferente.'}), 409
+        return jsonify({'erro': 'Erro ao salvar OS. Verifique os dados e tente novamente.'}), 500
 
 
 @os_bp.route('/', methods=['GET'])
