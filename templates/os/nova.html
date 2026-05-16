@@ -337,14 +337,30 @@
     <div class="section-body">
       <div class="sigs-wrap">
         <div class="sig-box">
-          <span class="sig-label">Assinatura do Cliente</span>
-          <div class="sig-canvas-wrap"><canvas id="sig-cliente"></canvas></div>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="clearSig('sig-cliente')">🗑 Limpar</button>
+          <span class="sig-label">
+            <i class="ph ph-pen-nib" style="color:var(--primary)"></i>
+            Assinatura do Cliente
+          </span>
+          <div class="sig-canvas-wrap" style="position:relative">
+            <canvas id="sig-cliente" style="touch-action:none"></canvas>
+            <span class="sig-hint">Assine aqui</span>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="clearSig('sig-cliente')">
+            <i class="ph ph-trash"></i> Limpar
+          </button>
         </div>
         <div class="sig-box">
-          <span class="sig-label">Assinatura do Técnico</span>
-          <div class="sig-canvas-wrap"><canvas id="sig-tecnico"></canvas></div>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="clearSig('sig-tecnico')">🗑 Limpar</button>
+          <span class="sig-label">
+            <i class="ph ph-pen-nib" style="color:var(--primary)"></i>
+            Assinatura do Técnico
+          </span>
+          <div class="sig-canvas-wrap" style="position:relative">
+            <canvas id="sig-tecnico" style="touch-action:none"></canvas>
+            <span class="sig-hint">Assine aqui</span>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="clearSig('sig-tecnico')">
+            <i class="ph ph-trash"></i> Limpar
+          </button>
         </div>
       </div>
     </div>
@@ -360,6 +376,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@5.1.3/dist/signature_pad.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/sig.js') }}"></script>
 <script src="{{ url_for('static', filename='js/geo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
