@@ -250,11 +250,15 @@
     </div>
     <div class="section-body">
       <div class="geo-area">
-        <div class="geo-top">
-          <button type="button" class="btn btn-secondary" onclick="capturarGeo()">📍 Capturar Localização</button>
+
+        <!-- GPS -->
+        <div class="geo-top" style="margin-bottom:16px">
+          <button type="button" class="btn btn-secondary" onclick="capturarGeo()">
+            <i class="ph ph-crosshair"></i> Capturar GPS
+          </button>
           <span class="geo-status" id="geo-status">Aguardando…</span>
         </div>
-        <div class="grid-2">
+        <div class="grid-2" style="margin-bottom:8px">
           <div class="form-group">
             <label class="form-label">Latitude</label>
             <input type="text" id="geo-lat" class="form-control" readonly placeholder="—">
@@ -264,10 +268,57 @@
             <input type="text" id="geo-lng" class="form-control" readonly placeholder="—">
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Endereço (editável)</label>
-          <input type="text" id="geo-endereco" class="form-control" placeholder="Rua, número, bairro, cidade…">
+
+        <!-- Divider -->
+        <div style="display:flex;align-items:center;gap:10px;margin:12px 0">
+          <hr style="flex:1;border:none;border-top:1px solid var(--border)">
+          <span style="font-size:.75rem;color:var(--text-2)">ou informe o endereço via CEP</span>
+          <hr style="flex:1;border:none;border-top:1px solid var(--border)">
         </div>
+
+        <!-- CEP auto-fill -->
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="ph ph-map-pin" style="color:var(--primary)"></i> CEP
+            </label>
+            <div style="position:relative">
+              <input type="text" id="geo-cep" class="form-control" placeholder="00000-000"
+                     maxlength="9" oninput="geoMascaraCep(this)" onblur="geoBuscarCep()">
+              <span id="geo-cep-spinner" style="display:none;position:absolute;right:10px;top:50%;
+                    transform:translateY(-50%);font-size:.85rem;color:var(--primary)">
+                <i class="ph ph-circle-notch" style="animation:spin .8s linear infinite"></i>
+              </span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Número / Complemento</label>
+            <input type="text" id="geo-numero" class="form-control" placeholder="Ex.: 100, Sala 3">
+          </div>
+          <div class="form-group col-2">
+            <label class="form-label">Logradouro</label>
+            <input type="text" id="geo-logradouro" class="form-control" placeholder="Preenchido pelo CEP ou GPS">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bairro</label>
+            <input type="text" id="geo-bairro" class="form-control" placeholder="Preenchido automaticamente">
+          </div>
+          <div class="form-group" style="display:flex;gap:8px">
+            <div style="flex:1">
+              <label class="form-label">Cidade</label>
+              <input type="text" id="geo-cidade" class="form-control" placeholder="Cidade">
+            </div>
+            <div style="width:70px">
+              <label class="form-label">UF</label>
+              <input type="text" id="geo-uf" class="form-control" placeholder="MT" maxlength="2"
+                     style="text-transform:uppercase">
+            </div>
+          </div>
+        </div>
+
+        <!-- Endereço composto (oculto, enviado ao backend) -->
+        <input type="hidden" id="geo-endereco">
+
       </div>
     </div>
   </div>
