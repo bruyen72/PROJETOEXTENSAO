@@ -166,7 +166,7 @@ function getFormData() {
     cliente_id:         val('cliente_id') ? parseInt(val('cliente_id')) : null,
     tipo_ocorrencia:    val('tipo_ocorrencia'),
     tecnico_id:         val('tecnico_id') ? parseInt(val('tecnico_id')) : null,
-    prioridade:         prioActive ? ({ baixa:'Baixa', media:'Media', urgente:'Urgente' }[prioActive.dataset.nivel] || 'Baixa') : 'Baixa',
+    prioridade:         prioActive ? ({ baixa:'Baixa', media:'Média', urgente:'Urgente' }[prioActive.dataset.nivel] || 'Baixa') : 'Baixa',
     status:             val('status_os') || 'Aberto',
     equip_tipo:         val('equip_tipo'),
     equip_marca:        val('equip_marca'),
